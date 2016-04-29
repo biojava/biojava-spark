@@ -13,6 +13,10 @@ import java.util.ArrayList;
 
 import java.util.List;
 
+
+/** Cluster protein sequences using SmithWaterman algorithm
+ *
+ */
 public class ClusterSequences implements Serializable {
 
 
