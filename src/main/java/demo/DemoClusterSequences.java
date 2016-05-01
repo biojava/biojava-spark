@@ -145,11 +145,6 @@ public class DemoClusterSequences implements Serializable{
         long timeE = System.currentTimeMillis();
         System.out.println("clustering took " + (timeE-timeS)/1000 + " sec. ");
 
-
-
-//        sequences = sequences.repartition(1);
-//        sequences.saveAsTextFile("data.out");
-
     }
 
 
