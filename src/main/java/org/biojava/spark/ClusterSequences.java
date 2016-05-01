@@ -27,8 +27,8 @@ public class ClusterSequences implements Serializable {
     /** passes in a JavaPairRDD where the first element is the ID of a sequence, the second one the string representation
      *
      * @param sc Java spark context
-     * @param sequences the sequences.
-     * @return a javapairrdd with the results
+     * @param sequences the sequences represented as sequence ID and sequence string..
+     * @return a Tuple5 with the following elements: name1, name2, overlap1, overlap2, % sequence ID
      */
     public JavaRDD<Tuple5<String,String,Float,Float,Float>> clusterSequences(JavaSparkContext sc, JavaPairRDD<String,String> sequences ){
 
