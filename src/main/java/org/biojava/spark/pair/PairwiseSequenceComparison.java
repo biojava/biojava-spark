@@ -42,7 +42,6 @@ public class PairwiseSequenceComparison implements Function<Tuple2<Tuple2<String
         Tuple2<String,String> p1 = tuple._1();
         Tuple2<String,String> p2 = tuple._2();
 
-
         SubstitutionMatrix matrix = SubstitutionMatrixHelper.getBlosum65();
         GapPenalty penalty = new SimpleGapPenalty();
         penalty.setOpenPenalty(8);

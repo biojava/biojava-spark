@@ -33,7 +33,8 @@ public class ClusterSequences implements Serializable {
     public JavaRDD<Tuple5<String,String,Float,Float,Float>> clusterSequences(JavaSparkContext sc, JavaPairRDD<String,String> sequences ){
 
 
-        System.out.println("Clustering " + sequences.count() + " sequences.");
+        long n = sequences.count();
+        System.out.println("Clustering " + n + " sequences (" + (n*(n-1)/2)+" combinations).");
 
         // cartesian gives us the cartesian product (full matrix)
         JavaPairRDD cartesian = sequences.cartesian(sequences);
