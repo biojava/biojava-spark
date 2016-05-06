@@ -30,7 +30,7 @@ public class MapChains {
 				.mapToDouble(t -> t._2.length)
 				.mean();
 		
-		System.out.println(meanCalphaLength+" is the mean C-alpha length in the PDB");
+		System.out.println("\n"+meanCalphaLength+" is the mean C-alpha length in the PDB");
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
 

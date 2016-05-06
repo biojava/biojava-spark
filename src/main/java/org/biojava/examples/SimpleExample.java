@@ -33,9 +33,12 @@ public class SimpleExample {
 				.filterRfree(maxRfree)
 				.size();
 		
-		System.out.println(numEntries+" found with resolution better than"+maxResolution+
+		// Print out the results
+		System.out.println("\n"+numEntries+" found with resolution better than "+maxResolution+
 				" and R-free less than "+maxRfree);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
+
+		// Gently settle down
 		SparkUtils.shutdown();
 	}
 }

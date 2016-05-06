@@ -27,19 +27,24 @@ import scala.Tuple2;
  */
 public class StructureDataRDD {
 
-	/**
-	 * The RDD of the {@link StructureDataInterface} data.
-	 */
+	/** The RDD of the {@link StructureDataInterface} data. */
 	private JavaPairRDD<String, StructureDataInterface> javaPairRdd;
 
 
 	/**
-	 * Empty constructor reads the sample data.
+	 * Empty constructor reads the sample data if {@link SparkUtils} has not been set 
+	 * with a path.
 	 */
 	public StructureDataRDD() {
-		URL inputPath = StructureDataRDD.class.getClassLoader().getResource("hadoop/subset");
-		// Set the config for the spark context
-		javaPairRdd = SparkUtils.getStructureDataRdd(inputPath.toString());
+		String filePath = SparkUtils.getFilePath();
+		if(filePath==null){
+			URL inputPath = StructureDataRDD.class.getClassLoader().getResource("hadoop/subset");
+			// Set the config for the spark context
+			javaPairRdd = SparkUtils.getStructureDataRdd(inputPath.toString());
+		}
+		else{
+			javaPairRdd = SparkUtils.getStructureDataRdd(SparkUtils.getFilePath());
+		}
 	}
 
 	/**

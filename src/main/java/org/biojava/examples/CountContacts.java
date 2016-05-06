@@ -32,7 +32,7 @@ public class CountContacts {
 						cutoff)
 				.getDistanceDistOfAtomInts("CA", "CA")
 				.mean();
-		System.out.println("Mean PRO-LYS CA-CA distance: "+mean);
+		System.out.println("\nMean PRO-LYS CA-CA distance: "+mean);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
 

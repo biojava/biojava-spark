@@ -44,7 +44,8 @@ import scala.Tuple2;
  */
 public class SparkUtils {
 
-
+	/** The file path of the Hadoop sequence file to read */
+	private static String hadoopFilePath = null;
 	private static SparkConf conf = null;
 	private static JavaSparkContext javaSparkContext = null;
 
@@ -126,12 +127,19 @@ public class SparkUtils {
 	}
 
 	/**
-	 * Function to gently shutdown at the end of a run.
+	 * Gently shutdown at the end of a run.
 	 */
 	public static void shutdown() {
 		javaSparkContext.close();
 	}
 
+	/**
+	 * Set the file path of the Hadoop file to read.
+	 * @param filePath
+	 */
+	public static void filePath(String filePath) {
+		hadoopFilePath = filePath;
+	}
 
 	/**
 	 * Get all the atoms of a given name or in a given group in the structure using a {@link StructureDataInterface}.
@@ -316,5 +324,13 @@ public class SparkUtils {
 		}
 		byte[] compressedData = byteStream.toByteArray();
 		return compressedData;
+	}
+
+	/**
+	 * Get the path to the Hadoop sequence file to read.
+	 * @return the {@link String} path of the Hadoop sequence file to read.
+	 */
+	public static String getFilePath() {
+		return hadoopFilePath;
 	}
 }

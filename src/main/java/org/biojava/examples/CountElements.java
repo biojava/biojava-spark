@@ -25,7 +25,7 @@ public class CountElements {
 		Map<String, Long> elementCountMap = new StructureDataRDD()
 				.findAtoms()
 				.countByElement();
-		System.out.println("Element map"+elementCountMap);
+		System.out.println("\nElement map"+elementCountMap);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
 
