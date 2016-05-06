@@ -2,6 +2,7 @@ package org.biojava.examples;
 
 
 import org.biojava.spark.data.AtomSelectObject;
+import org.biojava.spark.data.SparkUtils;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
@@ -23,7 +24,7 @@ public class CountContacts {
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 		// Get the atom contacts
-		Double mean = new StructureDataRDD("/Users/anthony/full")
+		Double mean = new StructureDataRDD()
 				.findContacts(new AtomSelectObject()
 						.groupNameList(new String[] {"PRO","LYS"})
 						.elementNameList(new String[] {"C"})
@@ -33,6 +34,8 @@ public class CountContacts {
 				.mean();
 		System.out.println("Mean PRO-LYS CA-CA distance: "+mean);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
+		SparkUtils.shutdown();
+
 
 	}
 }

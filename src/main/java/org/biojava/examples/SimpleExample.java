@@ -1,5 +1,6 @@
 package org.biojava.examples;
 
+import org.biojava.spark.data.SparkUtils;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
@@ -27,7 +28,7 @@ public class SimpleExample {
 		Long startTime = System.currentTimeMillis();
 		
 		// The actual code
-		Long numEntries = new StructureDataRDD("/Users/anthony/full")
+		Long numEntries = new StructureDataRDD()
 				.filterResolution(maxResolution)
 				.filterRfree(maxRfree)
 				.size();
@@ -35,5 +36,6 @@ public class SimpleExample {
 		System.out.println(numEntries+" found with resolution better than"+maxResolution+
 				" and R-free less than "+maxRfree);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
+		SparkUtils.shutdown();
 	}
 }

@@ -1,6 +1,7 @@
 package org.biojava.examples;
 
 
+import org.biojava.spark.data.SparkUtils;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
@@ -22,7 +23,7 @@ public class MapChains {
 		Long startTime = System.currentTimeMillis();
 		
 		Double meanCalphaLength = 
-				new StructureDataRDD("/Users/anthony/full")
+				new StructureDataRDD()
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalphaPair()
@@ -31,5 +32,7 @@ public class MapChains {
 		
 		System.out.println(meanCalphaLength+" is the mean C-alpha length in the PDB");
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
+		SparkUtils.shutdown();
+
 	}
 }

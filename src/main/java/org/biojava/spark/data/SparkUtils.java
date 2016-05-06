@@ -1,10 +1,13 @@
 package org.biojava.spark.data;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.vecmath.Point3d;
 
@@ -283,4 +286,35 @@ public class SparkUtils {
 
 	}
 
+
+	/**
+	 * Compress a byte array using Gzip.
+	 * @param byteArray the input byte array
+	 * @return the compressed byte array
+	 * @throws IOException
+	 */
+	public static byte[] gzipCompress(byte[] byteArray) throws IOException {
+		// Function to gzip compress the data for the hashmaps
+		ByteArrayOutputStream byteStream =
+				new ByteArrayOutputStream(byteArray.length);
+		try
+		{
+			GZIPOutputStream zipStream =
+					new GZIPOutputStream(byteStream);
+			try
+			{
+				zipStream.write(byteArray);
+			}
+			finally
+			{
+				zipStream.close();
+			}
+		}
+		finally
+		{
+			byteStream.close();
+		}
+		byte[] compressedData = byteStream.toByteArray();
+		return compressedData;
+	}
 }
