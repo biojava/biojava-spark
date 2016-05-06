@@ -7,7 +7,8 @@ import org.biojava.nbio.structure.contact.AtomContact;
 import org.rcsb.mmtf.api.StructureDataInterface;
 
 /**
- * A 
+ * A class to provide functions on a series of 
+ * {@link StructureDataInterface} objects.
  * @author Anthony Bradley
  *
  */

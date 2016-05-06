@@ -26,95 +26,6 @@ public class AtomSelectObject implements Serializable {
 	private String groupType;
 	
 	/**
-	 * @return the atomNameList
-	 */
-	public List<String> getAtomNameList() {
-		return atomNameList;
-	}
-
-	/**
-	 * @param atomNameList the atomNameList to set
-	 */
-	public void setAtomNameList(List<String> atomNameList) {
-		this.atomNameList = atomNameList;
-	}
-	
-	/**
-	 * @param atomNameList the atomNameList to set
-	 */
-	public void setAtomNameList(String[] atomNameList) {
-		this.atomNameList = Arrays.asList(atomNameList);
-	}
-
-	/**
-	 * @return the elementNameList
-	 */
-	public List<String> getElementNameList() {
-		return elementNameList;
-	}
-
-	/**
-	 * @param elementNameList the elementNameList to set
-	 */
-	public void setElementNameList(List<String> elementNameList) {
-		this.elementNameList = elementNameList;
-	}
-	
-	/**
-	 * @param elementNameList the elementNameList to set
-	 */
-	public void setElementNameList(String[] elementNameList) {
-		this.elementNameList = Arrays.asList(elementNameList);
-	}
-
-	/**
-	 * @return the groupNameList
-	 */
-	public List<String> getGroupNameList() {
-		return groupNameList;
-	}
-
-	/**
-	 * @param groupNameList the groupNameList to set
-	 */
-	public void setGroupNameList(List<String> groupNameList) {
-		this.groupNameList = groupNameList;
-	}
-	
-
-	/**
-	 * @param groupNameList the groupNameList to set
-	 */
-	public void setGroupNameList(String[] groupNameList) {
-		this.groupNameList = Arrays.asList(groupNameList);
-	}
-
-	/**
-	 * @return the charged
-	 */
-	public boolean isCharged() {
-		return charged;
-	}
-
-	/**
-	 * @param charged the charged to set
-	 */
-	public void setCharged(boolean charged) {
-		this.charged = charged;
-	}
-
-	/**
-	 * Constructor sets the defaults.
-	 */
-	public AtomSelectObject() {
-		atomNameList = new ArrayList<>();
-		elementNameList = new ArrayList<>();
-		groupNameList = new ArrayList<>();
-		charged = false;
-		groupType = null;
-	}
-	
-	/**
 	 * Constructor to allow data to be input at constructions
 	 */
 	public AtomSelectObject(String[] atomNameList, String[] elementNameList, String[] groupNameList,
@@ -141,8 +52,111 @@ public class AtomSelectObject implements Serializable {
 		this.charged = charged;
 		// GroupType can be specified or null ->> Should be Enum
 		this.groupType = groupType;
-
 	}
+	
+	/**
+	 * Empty constructor sets the defaults.
+	 */
+	public AtomSelectObject() {
+		atomNameList = new ArrayList<>();
+		elementNameList = new ArrayList<>();
+		groupNameList = new ArrayList<>();
+		charged = false;
+		groupType = null;
+	}
+	
+	/**
+	 * @return the atomNameList
+	 */
+	public List<String> getAtomNameList() {
+		return atomNameList;
+	}
+
+	/**
+	 * Set the list of atom names allowed.
+	 * @param atomNameList the atomNameList to set
+	 */
+	public AtomSelectObject atomNameList(List<String> atomNameList) {
+		this.atomNameList = atomNameList;
+		return this;
+	}
+	
+	/**
+	 * Set the array of atom names allowed.
+	 * @param atomNameList the atomNameList to set
+	 */
+	public AtomSelectObject atomNameList(String[] atomNameList) {
+		this.atomNameList = Arrays.asList(atomNameList);
+		return this;
+	}
+
+	/**
+	 * @return the elementNameList
+	 */
+	public List<String> getElementNameList() {
+		return elementNameList;
+	}
+
+	/**
+	 * Set the list of element names allowed.
+	 * @param elementNameList the elementNameList to set
+	 */
+	public AtomSelectObject elementNameList(List<String> elementNameList) {
+		this.elementNameList = elementNameList;
+		return this;
+	}
+	
+	/**
+	 * Set the array of element names allowed.
+	 * @param elementNameList the elementNameList to set
+	 */
+	public AtomSelectObject elementNameList(String[] elementNameList) {
+		this.elementNameList = Arrays.asList(elementNameList);
+		return this;
+	}
+
+	/**
+	 * @return the groupNameList
+	 */
+	public List<String> getGroupNameList() {
+		return groupNameList;
+	}
+
+	/**
+	 * Set the list of group names allowed.
+	 * @param groupNameList the groupNameList to set
+	 */
+	public AtomSelectObject groupNameList(List<String> groupNameList) {
+		this.groupNameList = groupNameList;
+		return this;
+	}
+	
+
+	/**
+	 * Set the array of group names allowed.
+	 * @param groupNameList the groupNameList to set
+	 */
+	public AtomSelectObject groupNameList(String[] groupNameList) {
+		this.groupNameList = Arrays.asList(groupNameList);
+		return this;
+	}
+
+	/**
+	 * @return the charged
+	 */
+	public boolean isCharged() {
+		return charged;
+	}
+
+	/**
+	 * Set whether charged elements spuld be found
+	 * @param charged the charged to set
+	 */
+	public AtomSelectObject charged(boolean charged) {
+		this.charged = charged;
+		return this;
+	}
+
 
 	/**
 	 * @return the groupType
@@ -152,10 +166,12 @@ public class AtomSelectObject implements Serializable {
 	}
 
 	/**
+	 * Set the type of group allowed.
 	 * @param groupType the groupType to set
 	 */
-	public void setGroupType(String groupType) {
+	public AtomSelectObject setGroupType(String groupType) {
 		this.groupType = groupType;
+		return this;
 	}
 
 	

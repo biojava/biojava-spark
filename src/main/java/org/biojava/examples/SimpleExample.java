@@ -20,8 +20,9 @@ public class SimpleExample {
 		AtomDataRDD atomDataRDD = new StructureDataRDD("/Users/anthony/full")
 				.filterResolution(3.0)
 				.filterRfree(0.3)
-				.findAtoms(new AtomSelectObject(null, null, null, true, null));
-				//.findContacts(new AtomSelectObject(null, null, null, false, null), 5.0);
+				.findAtoms(new AtomSelectObject().charged(false)
+						.atomNameList(new String[] {"CA","N"})
+						.groupNameList(new String[] {"LYS","PRO"}));
 //		// Now cache this
 		atomDataRDD.cacheData();
 		System.out.println(atomDataRDD.countByElement());
