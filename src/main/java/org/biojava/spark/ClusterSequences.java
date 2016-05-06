@@ -2,11 +2,15 @@ package org.biojava.spark;
 
 import org.apache.spark.api.java.JavaPairRDD;
 
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
 
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.biojava.spark.pair.PairwiseSequenceComparison;
 import scala.Tuple2;
+import scala.Tuple5;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -20,94 +24,51 @@ import java.util.List;
 public class ClusterSequences implements Serializable {
 
 
-    int pairsProcessed = 0;
-
-    int nrThreads= 1;
-    int tasksPerThread = 1;
-    float minOverlap = 0.9f;
-    float percid = 0.4f;
-
-    int batchSize = 100;
-
-    /** passes in the parameters for this job
-     *
-     * @param nrThreads number of threads to use
-     * @param tasksPerThread number of tasks per thread (recommended 3)
-     * @param minOverlap minimum overlap between two sequences to be clustered together
-     * @param percid minimum percent sequence ID between two sequences to be clustered together.
-     * @param batchSize the batch size
-     */
-    public ClusterSequences(int nrThreads, int tasksPerThread, float minOverlap, float percid, int batchSize){
-        this.nrThreads = nrThreads;
-        this.tasksPerThread = tasksPerThread;
-        this.minOverlap  = minOverlap;
-        this.percid = percid;
-        this.batchSize = batchSize;
-    }
-
-
     /** passes in a JavaPairRDD where the first element is the ID of a sequence, the second one the string representation
      *
      * @param sc Java spark context
-     * @param sequences the sequences.
-     * @return a javapairrdd with the results
+     * @param sequences the sequences represented as sequence ID and sequence string..
+     * @return a Tuple5 with the following elements: name1, name2, overlap1, overlap2, % sequence ID
      */
-    public JavaPairRDD clusterSequences(JavaSparkContext sc, JavaPairRDD<String,String> sequences ){
+    public JavaRDD<Tuple5<String,String,Float,Float,Float>> clusterSequences(JavaSparkContext sc, JavaPairRDD<String,String> sequences ){
 
 
-        System.out.println("Clustering " + sequences.count() + " sequences.");
+        long n = sequences.count();
+        System.out.println("Clustering " + n + " sequences (" + (n*(n-1)/2)+" combinations).");
 
-        List<Tuple2<String,String>> orderedSeq = sequences.take((int)sequences.count());
+        // cartesian gives us the cartesian product (full matrix)
+        JavaPairRDD cartesian = sequences.cartesian(sequences);
 
-        int totalPairs = orderedSeq.size();
 
-        this.pairsProcessed = 0;
+        // now we want to filter this matrix and only take one half
+        JavaPairRDD combinations = cartesian.filter(new Function<Tuple2<Tuple2,Tuple2>,Boolean>(){
 
-        List<Tuple2<Tuple2<String, String>, Boolean>> empty = new ArrayList<>();
-        JavaPairRDD masterRDD = sc.parallelizePairs(empty);
+            @Override
+            public Boolean call(Tuple2<Tuple2, Tuple2> t) throws Exception {
 
-        while ( this.pairsProcessed < totalPairs) {
-            System.out.println("Pairs processed: " + this.pairsProcessed);
+                Tuple2<String,String> t1 = t._1();
+                Tuple2<String,String> t2 = t._2();
 
-            List<Tuple2<Integer, Integer>> pairList = getPairList(orderedSeq,totalPairs);
+                String seqId1 = t1._1();
+                String seqId2 = t2._1();
 
-            List<Tuple2<Tuple2<String, String>, Boolean>> scoreList = sc.parallelizePairs(pairList, nrThreads * tasksPerThread)
-                    .mapToPair(new PairwiseSequenceComparison(orderedSeq, minOverlap, percid)).collect();
+                // we exclude alignments against itself
+                if ( seqId1.equals(seqId2))
+                    return false;
 
-            JavaPairRDD jrdd = sc.parallelizePairs(scoreList);
-
-            masterRDD = masterRDD.leftOuterJoin(jrdd);
-
-            //TODO: remove all sequences that are already clustered together from the comparisons
-
-        }
-
-        return masterRDD;
-    }
-
-    private  List<Tuple2<Integer, Integer>> getPairList(List<Tuple2<String,String>> sequences, int numPairs) {
-
-        List<Tuple2<Integer,Integer>> list = new ArrayList(sequences.size());
-
-        for ( int i = this.pairsProcessed ; i < sequences.size() ; i ++){
-            for ( int j = i+1 ; j< sequences.size() ; j++){
-                list.add(new Tuple2<Integer,Integer>(i,j));
+                return ( seqId1.compareTo(seqId2) < 0);
             }
+        });
 
-            if ( list.size() > batchSize) {
-                this.pairsProcessed = i+1;
-                return list;
-            }
-        }
+        PairwiseSequenceComparison smithWaterman = new PairwiseSequenceComparison(sequences.collect(), 0.0f, 0.f);
 
-        this.pairsProcessed = numPairs;
+        JavaRDD<Tuple5<String,String,Float,Float,Float>> results = combinations.map(smithWaterman);
 
-        return list;
+        return results;
+
+
+
     }
-
-
-
-
 
 
 
