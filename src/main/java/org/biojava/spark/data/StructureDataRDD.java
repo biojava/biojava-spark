@@ -139,5 +139,14 @@ public class StructureDataRDD {
 				.flatMapToPair(new Point3dCalpha());
 	}
 	
+	/**
+	 * Get the number of entries in the RDD.
+	 * @return the {@link Long} number of entries
+	 */
+	public Long size() {
+		return javaPairRdd
+				.count();
+	}
+	
 	
 }

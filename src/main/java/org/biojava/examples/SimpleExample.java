@@ -1,40 +1,39 @@
 package org.biojava.examples;
 
-import org.biojava.spark.data.AtomDataRDD;
-import org.biojava.spark.data.AtomSelectObject;
-import org.biojava.spark.data.SparkUtils;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
- * A very simple example reading the PDB and printing the 
- * composition of elements.
+ * A very simple example reading the PDB and finding the number
+ * of entries in the PDB with resolution better than 3.0 Angstrom
+ * and R-free better than 0.3.
  * @author Anthony Bradley
  *
  */
 public class SimpleExample {
 
+	/**
+	 * A very simple example reading the PDB and finding the number
+	 * of entries in the PDB with resolution better than 3.0 Angstrom
+	 * and R-free better than 0.3.
+	 * @param args the input list of arguments.
+	 */
 	public static void main(String[] args) {
 		
-		Long startTime = System.currentTimeMillis();
-		// Get the RDD of the atom contacts
-		AtomDataRDD atomDataRDD = new StructureDataRDD("/Users/anthony/full")
-				.filterResolution(3.0)
-				.filterRfree(0.3)
-				.findAtoms(new AtomSelectObject().charged(false)
-						.atomNameList(new String[] {"CA","N"})
-						.groupNameList(new String[] {"LYS","PRO"}));
-//		// Now cache this
-		atomDataRDD.cacheData();
-		System.out.println(atomDataRDD.countByElement());
-//		// Now get the group contacts
-//		System.out.println(atomContactRDD.countInterGroupContacts("HIS", "LYS"));
-//		System.out.println(atomContactRDD.countInterGroupContacts("LYS", "PRO"));
-//		System.out.println(atomContactRDD.countInterGroupContacts("LYS", "HIS"));
-//		System.out.println(atomContactRDD.getDistanceDistOfAtomInts("CA", "CA")
-//		.mean());
+		// Specify your limits for R-factor and Resolution
+		double maxResolution = 3.0;
+		double maxRfree = 0.3;
 		
-		SparkUtils.shutdown();
-		Long endTime = System.currentTimeMillis();
-		System.out.println("Total time: "+((endTime-startTime)/1000));
+		// Starter counter
+		Long startTime = System.currentTimeMillis();
+		
+		// The actual code
+		Long numEntries = new StructureDataRDD("/Users/anthony/full")
+				.filterResolution(maxResolution)
+				.filterRfree(maxRfree)
+				.size();
+		
+		System.out.println(numEntries+" found with resolution better than"+maxResolution+
+				" and R-free less than "+maxRfree);
+		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 	}
 }

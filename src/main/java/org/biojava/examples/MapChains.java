@@ -6,14 +6,14 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
- * Class to map the PDB to chains an operate on it.
+ * Example of mapping the PDB to chains of just C-alpha coords.
  * @author Anthony Bradley
  *
  */
 public class MapChains {
 
 	/**
-	 * The main function
+	 * Example of mapping the PDB to chains of just C-alpha coords.
 	 * @param args
 	 */
 	public static void main(String[] args) {
@@ -23,7 +23,8 @@ public class MapChains {
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalphaPair();
-				
-				
+
+		
+
 	}
 }
