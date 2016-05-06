@@ -2,7 +2,12 @@ package org.biojava.spark.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,6 +16,9 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.vecmath.Point3d;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.spark.SparkConf;
@@ -48,6 +56,11 @@ public class SparkUtils {
 	private static String hadoopFilePath = null;
 	private static SparkConf conf = null;
 	private static JavaSparkContext javaSparkContext = null;
+	/** Where to get the data from. */
+	public static final String URL_LOCATION = "http://mmtf.rcsb.org/v0/hadoopfiles/full.tar";
+	private static final String hadoopBase = "hadoop/v0";
+	private static final String pdbFileName = "full";
+	private static final String tarFileName = "full.tar";
 
 	/**
 	 * Get an {@link JavaPairRDD} of {@link String} {@link Structure} from a file path.
@@ -332,5 +345,78 @@ public class SparkUtils {
 	 */
 	public static String getFilePath() {
 		return hadoopFilePath;
+	}
+
+
+	/**
+	 * Function to download the PDB and place it on the file system.
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+	public static void downloadPdb() throws FileNotFoundException, IOException {
+		// Get the base path
+		File dstFile = new File(getHadoopBase());
+		if (dstFile.exists()){
+			dstFile.delete();
+		}
+		try {
+			URL url = new URL(URL_LOCATION);
+			System.out.println("Downloading PDB data....");
+			FileUtils.copyURLToFile(url, dstFile);
+		} catch (Exception e) {
+			System.err.println(e);
+		}
+		// And untar it.
+		untar(getFullPdbFile(), new TarArchiveInputStream(new FileInputStream(dstFile)));
+	}
+
+	/**
+	 * Get the path for where the full PDB file will be stored.
+	 * @return the {@link String} describing where the full PDB data is
+	 */
+	public static String getFullPdbFile() {
+		URL baseURI = SparkUtils.class.getClassLoader().getResource(hadoopBase+File.separator+pdbFileName);
+		if (baseURI==null){
+			return null;
+		}
+		else{
+			return baseURI.getPath();
+		}
+	}
+
+	/**
+	 * Get the base path of where to store Hadoop data.
+	 * @return the {@link String} of the path of where Hadoop data should be
+	 */
+	public static String getHadoopBase() {
+		URL hadoopUrl = SparkUtils.class.getClassLoader().getResource(hadoopBase);
+		System.out.println(hadoopUrl);
+		return hadoopUrl.getPath()+File.separator+tarFileName;
+	}
+
+	/**
+	 * Untar a folder to the path.
+	 * @param destinationFolder the folder to write to
+	 * @param tarInputStream the {@link TarArchiveInputStream} input
+	 * @throws IOException
+	 */
+	private static void untar(String destinationFolder, TarArchiveInputStream tarInputStream) throws IOException {
+		System.out.println("Untarring PDB...");
+		TarArchiveEntry tarEntry = tarInputStream.getNextTarEntry();
+		while (tarEntry != null) {
+			// create a file with the same name as the tarEntry
+			File destPath = new File(destinationFolder + System.getProperty("file.separator") + tarEntry.getName());
+			System.out.println("Extracting: " + destPath.getCanonicalPath());
+			if (tarEntry.isDirectory()) {
+				destPath.mkdirs();
+			} else {
+				destPath.createNewFile();
+				FileOutputStream fout = new FileOutputStream(destPath);
+				tarInputStream.read(new byte[(int) tarEntry.getSize()]);
+				fout.close();
+			}
+			tarEntry = tarInputStream.getNextTarEntry();
+		}
+		tarInputStream.close();
 	}
 }

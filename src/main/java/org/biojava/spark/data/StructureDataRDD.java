@@ -1,6 +1,9 @@
 package org.biojava.spark.data;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 
 import javax.vecmath.Point3d;
@@ -36,15 +39,42 @@ public class StructureDataRDD {
 	 * with a path.
 	 */
 	public StructureDataRDD() {
+		setupRdd();
+	}
+	
+	/**
+	 * A constructor to download the PDB on construction.
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+	public StructureDataRDD(boolean download) throws FileNotFoundException, IOException {
+		SparkUtils.downloadPdb();
+		setupRdd();
+	}
+	
+	/**
+	 * Function to setup an RDD of data.
+	 */
+	private void setupRdd() {
 		String filePath = SparkUtils.getFilePath();
 		if(filePath==null){
-			URL inputPath = StructureDataRDD.class.getClassLoader().getResource("hadoop/subset");
-			// Set the config for the spark context
-			javaPairRdd = SparkUtils.getStructureDataRdd(inputPath.toString());
+			// First try the full
+			System.out.println(SparkUtils.getFullPdbFile());
+			if(SparkUtils.getFullPdbFile()!=null && new File(SparkUtils.getFullPdbFile()).exists()) {
+				javaPairRdd = SparkUtils.getStructureDataRdd(SparkUtils.getFullPdbFile());
+				System.out.println("Using full PDB data.");
+			}
+			else{
+				URL inputPath = SparkUtils.class.getClassLoader().getResource("hadoop/subset");
+				// Set the config for the spark context
+				javaPairRdd = SparkUtils.getStructureDataRdd(inputPath.toString());
+				System.out.println("Full data not available");
+				System.out.println("Using small 1% subset");
+			}
 		}
 		else{
 			javaPairRdd = SparkUtils.getStructureDataRdd(SparkUtils.getFilePath());
-		}
+		}		
 	}
 
 	/**
