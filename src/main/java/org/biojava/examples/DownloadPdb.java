@@ -22,7 +22,6 @@ public class DownloadPdb {
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException {
 		new StructureDataRDD(true);
-		
 	}
 
 }
