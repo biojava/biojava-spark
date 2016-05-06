@@ -26,7 +26,12 @@ import java.util.List;
 public class PairwiseSequenceComparison implements PairFunction<Tuple2<Integer,Integer>,Tuple2<String,String>,Boolean>, Serializable {
 
 
-    List<Tuple2<String,String>> sequences;
+    /**
+	 * The serial id for this version of the class.
+	 */
+	private static final long serialVersionUID = 8962410797026956531L;
+
+	List<Tuple2<String,String>> sequences;
 
     float minOverlap;
     float minPercid;
@@ -62,7 +67,7 @@ public class PairwiseSequenceComparison implements PairFunction<Tuple2<Integer,I
 
         }
 
-        SubstitutionMatrix matrix = SubstitutionMatrixHelper.getBlosum65();
+        SubstitutionMatrix<AminoAcidCompound> matrix = SubstitutionMatrixHelper.getBlosum65();
         GapPenalty penalty = new SimpleGapPenalty();
         penalty.setOpenPenalty(8);
         penalty.setExtensionPenalty(1);
