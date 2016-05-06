@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.vecmath.Point3d;
+
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.spark.SparkConf;
@@ -38,8 +40,8 @@ import scala.Tuple2;
  *
  */
 public class SparkUtils {
-	
-	
+
+
 	private static SparkConf conf = null;
 	private static JavaSparkContext javaSparkContext = null;
 
@@ -65,7 +67,7 @@ public class SparkUtils {
 					return new Tuple2<String, Structure>(t._1, mmtfStructureReader.getStructure());
 				});
 	}
-	
+
 	/**
 	 * Get an {@link JavaPairRDD} of {@link String} {@link StructureDataInterface} from a file path.
 	 * @param filePath the input path to the hadoop sequence file
@@ -89,14 +91,14 @@ public class SparkUtils {
 	 */
 	public static SparkConf getConf() {
 		if (conf==null){
-		// This is the default 2 line structure for Spark applications
-		conf = new SparkConf().setMaster("local[*]")
-				.setAppName(SparkUtils.class.getSimpleName()); 
+			// This is the default 2 line structure for Spark applications
+			conf = new SparkConf().setMaster("local[*]")
+					.setAppName(SparkUtils.class.getSimpleName()); 
 		}
 		return conf;
-		
+
 	}
-	
+
 	/**
 	 * Get the {@link JavaSparkContext} for this run.
 	 * @return the {@link JavaSparkContext} for this run
@@ -107,8 +109,8 @@ public class SparkUtils {
 		}
 		return javaSparkContext;
 	}
-	
-	
+
+
 	/**
 	 * Get the {@link JavaSparkContext} for this run.
 	 * @return the {@link JavaSparkContext} for this run
@@ -126,8 +128,8 @@ public class SparkUtils {
 	public static void shutdown() {
 		javaSparkContext.close();
 	}
- 	
-	
+
+
 	/**
 	 * Get all the atoms of a given name or in a given group in the structure using a {@link StructureDataInterface}.
 	 * @param structure the input {@link StructureDataInterface}
@@ -178,7 +180,7 @@ public class SparkUtils {
 		grid.addAtoms(atomArray);
 		return grid.getContacts();
 	}
-	
+
 	/**
 	 * Get the contacts between two lists of atoms
 	 * @param atomListOne the first list of {@link Atom}s
@@ -193,8 +195,8 @@ public class SparkUtils {
 		grid.addAtoms(atomArrayOne, atomArrayTwo);
 		return grid.getContacts();
 	}
-	
-	
+
+
 
 	/**
 	 * Get all the atoms in the structure using a {@link StructureDataInterface}.
@@ -207,7 +209,7 @@ public class SparkUtils {
 		int lastNumGroup = 0;
 		int atomCounter = 0;
 		for(int chainInd=0; chainInd<structure.getChainsPerModel()[0]; chainInd++){
-			
+
 			// Set the type
 			ChemComp cc = new ChemComp();
 			cc.setType(getType(structure, chainInd));
@@ -242,17 +244,43 @@ public class SparkUtils {
 		return atomList;
 	}
 
-
-	private static String getType(StructureDataInterface structure, int chainInd) {
-		for(int i=0; i<structure.getNumEntities(); i++){
-			for(int chainIndex : structure.getEntityChainIndexList(i)){
+	/**
+	 * Get the type of a given chain index.
+	 * @param structureDataInterface the input {@link StructureDataInterface}
+	 * @param chainInd the index of the relevant chain
+	 * @return the {@link String} describing the chain 
+	 */
+	public static String getType(StructureDataInterface structureDataInterface, int chainInd) {
+		for(int i=0; i<structureDataInterface.getNumEntities(); i++){
+			for(int chainIndex : structureDataInterface.getEntityChainIndexList(i)){
 				if(chainInd==chainIndex){
-					return structure.getEntityType(i);
+					return structureDataInterface.getEntityType(i);
 				}
 			}
 		}
 		System.err.println("ERROR FINDING ENTITY FOR CHAIN: "+chainInd);
 		return "NULL";
+	}
+
+	/**
+	 * Get the calpha as a {@link Point3d}.
+	 * @param structureDataInterface the {@link StructureDataInterface} to read
+	 * @param groupType the integer specifying the grouptype
+	 * @param atomCounter the atom count at the start of this group
+	 * @return the point3d object specifying the calpha of this point
+	 */
+	public static Point3d getCalpha(StructureDataInterface structureDataInterface, int groupType, int atomCounter) {
+		for(int i=0; i<structureDataInterface.getNumAtomsInGroup(groupType);i++){
+			if(structureDataInterface.getGroupAtomNames(groupType)[i].equals("CA")){
+				Point3d point3d = new Point3d();
+				point3d.x = structureDataInterface.getxCoords()[atomCounter+i];
+				point3d.y = structureDataInterface.getyCoords()[atomCounter+i]; 
+				point3d.z = structureDataInterface.getzCoords()[atomCounter+i];
+				return point3d;
+			}
+		}
+		return null;
+
 	}
 
 }

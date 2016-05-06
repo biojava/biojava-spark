@@ -1,8 +1,11 @@
 package org.biojava.spark.data;
 
+import javax.vecmath.Point3d;
+
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.rcsb.mmtf.api.StructureDataInterface;
 
@@ -114,7 +117,27 @@ public class StructureDataRDD {
 		return new AtomDataRDD(javaPairRdd.flatMap(new CalculateFrequency(new AtomSelectObject())));
 	}
 	
+	/**
+	 * Get the chains for this list of {@link StructureDataInterface}.
+	 * @return the chains as {@link ChainDataRDD} of {@link Chain}
+	 */
+	public ChainDataRDD findChains() {
+		return new ChainDataRDD(
+				javaPairRdd.flatMap(new GetChains()));
+	}
 
+	
+	/**
+	 * Get the {@link Point3d} of the C-alpha co-ordinate data
+	 * as lightweight point 3d objects.
+	 * @return the {@link JavaPairRDD} {@link String} {@link Point3d} 
+	 * array
+	 */
+	public JavaPairRDD<String, Point3d[]> getCalphaPair() {	
+		
+		return javaPairRdd
+				.flatMapToPair(new Point3dCalpha());
+	}
 	
 	
 }
