@@ -1,12 +1,11 @@
 package org.biojava.examples;
 
-import javax.vecmath.Point3d;
 
-import org.apache.spark.api.java.JavaPairRDD;
 import org.biojava.spark.data.StructureDataRDD;
 
 /**
  * Example of mapping the PDB to chains of just C-alpha coords.
+ * Calculate the mean C-alpha length in the PDB.
  * @author Anthony Bradley
  *
  */
@@ -14,17 +13,23 @@ public class MapChains {
 
 	/**
 	 * Example of mapping the PDB to chains of just C-alpha coords.
+	 * Calculate the mean C-alpha length in the PDB.
 	 * @param args
 	 */
 	public static void main(String[] args) {
-
-		JavaPairRDD<String, Point3d[]> calphaChains = 
+		
+		// Starter counter
+		Long startTime = System.currentTimeMillis();
+		
+		Double meanCalphaLength = 
 				new StructureDataRDD("/Users/anthony/full")
 				.filterResolution(3.0)
 				.filterRfree(0.3)
-				.getCalphaPair();
-
+				.getCalphaPair()
+				.mapToDouble(t -> t._2.length)
+				.mean();
 		
-
+		System.out.println(meanCalphaLength+" is the mean C-alpha length in the PDB");
+		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 	}
 }
