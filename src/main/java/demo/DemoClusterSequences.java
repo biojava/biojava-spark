@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
@@ -12,6 +13,7 @@ import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.ecod.EcodDatabase;
 import org.biojava.nbio.structure.ecod.EcodDomain;
 import org.biojava.nbio.structure.ecod.EcodFactory;
@@ -37,12 +39,19 @@ public class DemoClusterSequences implements Serializable{
     private static final float MIN_OVERLAP = .9f;
     private static final float MIN_PERCID  = .4f;
 
+    // break up the calculation in 10 fractions
+    // each fraction will have the all vs. all calculation performed
+    // and clustering will be merged
+    private static final int nrFractions = 10;
 
     public static void main(String[] args){
 
+        long timeS = System.currentTimeMillis();
         AtomCache cache;
         if ( args.length > 0){
-            cache = new AtomCache(args[0]);
+            System.setProperty("PDB_DIR", args[0]);
+            UserConfiguration config = new UserConfiguration();
+            cache = new AtomCache(config);
         } else {
             cache  = new AtomCache();
         }
@@ -81,6 +90,10 @@ public class DemoClusterSequences implements Serializable{
             e.printStackTrace();
         }
 
+        long timeE = System.currentTimeMillis();
+
+        System.err.println("TOTAL TIME: " + ( timeE-timeS)/100 + " sec.");
+
 
     }
 
@@ -105,7 +118,9 @@ public class DemoClusterSequences implements Serializable{
 
         ecodDomains.printSchema();
 
-        ecodDomains = ecodDomains.sample(false,0.001);
+        ecodDomains = ecodDomains.limit(50);
+
+        //ecodDomains = ecodDomains.sample(false,0.0001);
 
         ecodDomains.show();
 
@@ -126,24 +141,42 @@ public class DemoClusterSequences implements Serializable{
 
 
         long timeS = System.currentTimeMillis();
-        ClusterSequences cluster = new ClusterSequences();
+        ClusterSequences cluster = new ClusterSequences(nrFractions, MIN_OVERLAP, MIN_OVERLAP,MIN_PERCID );
 
-        JavaRDD<Tuple5<String,String,Float,Float,Float>> results = cluster.clusterSequences(sc,sequences);
+        JavaPairRDD results = cluster.clusterSequences(sc,sequences,5);
 
+        results.foreach(t-> System.out.println("FINAL CLUSTER: " + t));
+
+
+        /*
         JavaRDD hits = results.filter(t -> t._3() > MIN_OVERLAP && t._4() > MIN_OVERLAP && t._5() > MIN_PERCID);
 
         hits = hits.repartition(1);
 
-        try {
-            File outFile = File.createTempFile("seq_cluster","txt");
-            hits.saveAsTextFile(outFile.getAbsolutePath());
-            System.out.println("Wrote to " + outFile.getAbsolutePath());
+        hits.foreach(new VoidFunction() {
+            @Override
+            public void call(Object o) throws Exception {
+                System.out.println(o);
+            }
+        });
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+//        try {
+//            File outFile = File.createTempFile("seq_cluster","txt");
+//            hits.saveAsTextFile(outFile.getAbsolutePath());
+//            System.out.println("Wrote to " + outFile.getAbsolutePath());
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+*/
         long timeE = System.currentTimeMillis();
-        System.out.println("clustering took " + (timeE-timeS)/1000 + " sec. ");
+        long runTime = (timeE- timeS);
+        System.out.println("clustering took " + (runTime/1000) + " sec. ");
+        long n = ecodDomains.count();
+        long combinations = n * (n-1) / 2;
+
+        System.out.println("Average time per comparison: " + (runTime / combinations) + " ms.");
 
     }
 

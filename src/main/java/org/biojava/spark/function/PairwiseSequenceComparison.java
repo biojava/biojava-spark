@@ -1,4 +1,4 @@
-package org.biojava.spark.pair;
+package org.biojava.spark.function;
 
 /**
  * Created by ap3 on 29/04/2016.
@@ -11,6 +11,7 @@ import org.biojava.nbio.alignment.SimpleGapPenalty;
 import org.biojava.nbio.alignment.template.GapPenalty;
 import org.biojava.nbio.alignment.template.PairwiseSequenceAligner;
 import org.biojava.nbio.core.alignment.matrices.SubstitutionMatrixHelper;
+import org.biojava.nbio.core.alignment.template.AlignedSequence;
 import org.biojava.nbio.core.alignment.template.SequencePair;
 import org.biojava.nbio.core.alignment.template.SubstitutionMatrix;
 import org.biojava.nbio.core.sequence.ProteinSequence;
@@ -76,16 +77,24 @@ public class PairwiseSequenceComparison implements Function<Tuple2<Tuple2<String
 
             int size = alignment.getLength();
 
-            float overlap1 = l1 / (float) size;
-            float overlap2 = l2 / (float) size;
+            AlignedSequence alignedSequence1 = alignment.getAlignedSequence(1);
+            AlignedSequence alignedSequence2 = alignment.getAlignedSequence(2);
+
+            String alignedSeq1 = alignedSequence1.getSequenceAsString().replaceAll("-","");
+            String alignedSeq2 = alignedSequence2.getSequenceAsString().replaceAll("-","");
+
+            int size1 = alignedSeq1.length();
+            int size2 = alignedSeq2.length();
+
+            float overlap1 = size1 / (float) l1;
+            float overlap2 = size2 / (float) l2;
 
             if ( debug )
                 System.out.println(p1._1() + " " + p2._1() + " size:" + size + " l1: " + l1 + " l2: " + l2 + " overlap1 " + overlap1 + " overlap2 " + overlap2 + " %id: " + percentIdenticals);
 
-
             return new Tuple5<String, String, Float,Float,Float>(p1._1(),p2._1(),overlap1,overlap2,percentIdenticals);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Could not align " + p1._1() + " vs." + p2._1());
         }
 
 
