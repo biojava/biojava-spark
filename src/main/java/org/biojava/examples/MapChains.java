@@ -26,7 +26,7 @@ public class MapChains {
 				new StructureDataRDD()
 				.filterResolution(3.0)
 				.filterRfree(0.3)
-				.getCalphaPair()
+				.getCalpha()
 				.mapToDouble(t -> t._2.getStructure().length)
 				.mean();
 		

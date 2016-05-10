@@ -176,12 +176,12 @@ public class StructureDataRDD {
 	/**
 	 * Get the {@link Point3d} of the C-alpha co-ordinate data
 	 * as lightweight point 3d objects.
-	 * @return the {@link JavaPairRDD} {@link String} 
+	 * @return the segment  data
 	 * array
 	 */
-	public JavaPairRDD<String, Segment> getCalphaPair() {	
-		return javaPairRdd
-				.flatMapToPair(new Point3dCalpha(null));
+	public SegmentDataRDD getCalpha() {	
+		return new SegmentDataRDD(javaPairRdd
+				.flatMapToPair(new Point3dCalpha(null)));
 	}
 	
 	/**
@@ -189,12 +189,11 @@ public class StructureDataRDD {
 	 * as lightweight point 3d objects. Fragmented based on size. The fragments
 	 * are continuous and overlapping.
 	 * @param fragSize the size of every fragment
-	 * @return the {@link JavaPairRDD} {@link String} {@link Point3d} 
-	 * array of fragments
+	 * @return the fragments as an RDD
 	 */
-	public JavaPairRDD<String, Segment> getFragments(int fragSize) {	
-		return javaPairRdd
-				.flatMapToPair(new Point3dCalpha(fragSize));
+	public SegmentDataRDD getFragments(int fragSize) {	
+		return new SegmentDataRDD(javaPairRdd
+				.flatMapToPair(new Point3dCalpha(fragSize)));
 	}
 
 
