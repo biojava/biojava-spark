@@ -8,7 +8,11 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.broadcast.Broadcast;
+
 import org.biojava.spark.function.*;
+import org.jgrapht.UndirectedGraph;
+import org.jgrapht.alg.ConnectivityInspector;
+import org.jgrapht.graph.*;
 import scala.Tuple2;
 import scala.Tuple5;
 
@@ -88,6 +92,8 @@ public class ClusterSequences implements Serializable {
 
         JavaPairRDD<String,String> allClusters = JavaPairRDD.fromJavaRDD(sc.emptyRDD());
 
+        JavaPairRDD<String,Iterable<String>> groupedPairs = allClusters.groupByKey();
+
         for ( Integer fractionIndex : fractionKeys) {
 
             JavaPairRDD<String,Iterable<Tuple5>> results = calculateAvaOnFractions(sc, sequences, fraction, fractionIndex);
@@ -111,21 +117,20 @@ public class ClusterSequences implements Serializable {
 
             clusters.foreach(t-> System.out.println(" # Cluster:" + t));
 
-            allClusters = allClusters.union(clusters);
-
             JavaRDD representativeKeys = results.keys();
+            allKeys = allKeys.union(representativeKeys).distinct();
 
-            allKeys.union(representativeKeys);
+            JavaPairRDD<String,Iterable<String>> groupedClusters = clusters.groupByKey();
+
+            groupedPairs = combineRDDs(sc,groupedPairs,groupedClusters);
+
         }
 
         long initialClusteringSize = sequences.count();
         long newClusteringSize = allKeys.count();
 
-        JavaPairRDD<String,Iterable<String>> groupedPairs = allClusters.groupByKey();
-
-
         if ( initialClusteringSize == newClusteringSize) {
-            System.out.println("This iteration did not find any new sub-clusters.");
+            System.out.println("This iteration did not find any new sub-clusters. ( " + initialClusteringSize+")");
 
             // no more iterations
 
@@ -138,9 +143,7 @@ public class ClusterSequences implements Serializable {
 
         nrIterations--;
 
-
         // build up remaining sequences JavaPairRDD
-
 
         List<String>requestedKeys = allKeys.collect();
 
@@ -152,18 +155,95 @@ public class ClusterSequences implements Serializable {
         JavaPairRDD<String,Iterable<String>> finalResults = clusterSequences(sc,remainingSequences,nrIterations);
 
 
-        finalResults = finalResults.union(groupedPairs);
-//        JavaPairRDD results = allClusters.groupByKey();
-//
-//        results.foreach(t-> System.out.println("Final cluster: " + t));
-//
-//
-//        JavaRDD<Tuple5<String,String,Float,Float,Float>> finalresults = null;
+        // to combine the RDDs, use GraphX.
 
+        finalResults = combineRDDs(sc,finalResults,groupedPairs);
+
+//
         return finalResults;
 
 
 
+    }
+
+    private JavaPairRDD<String, Iterable<String>> combineRDDs(JavaSparkContext  sc,
+                                                              JavaPairRDD<String, Iterable<String>> rdd1,
+                                                              JavaPairRDD<String, Iterable<String>> rdd2) {
+
+
+        if ( rdd1 == null || rdd1.isEmpty())
+            return rdd2;
+        if ( rdd2 == null || rdd2.isEmpty())
+            return rdd1;
+
+        System.out.println(rdd1.first());
+
+        System.out.println(rdd2.first());
+
+
+        JavaPairRDD<String,String> flatRDD1 = rdd1.flatMapValues(new FlatMapCluster());
+
+        JavaPairRDD<String,String> flatRDD2 = rdd2.flatMapValues(new FlatMapCluster());
+
+
+        // a non-simple graph in which both loops and multiple edges are permitted
+        UndirectedGraph<String,DefaultEdge> graph = new Pseudograph<>(DefaultEdge.class);
+
+        ConnectivityInspector inspector = new ConnectivityInspector<>(graph);
+
+        BuildUndirectedGraph buildGraph = new BuildUndirectedGraph(graph);
+
+
+        // with the partitioning this does not work, so we can't do just this: :-/
+        // flatRDD1.foreach(buildGraph);
+        //flatRDD2.foreach(buildGraph);
+
+
+        // ugly workaround. TODO: in the future replace with GraphX (once it is useable from Java, or Graphframes. See SPARK_3665 )
+
+         List<Tuple2<String,String>> firstTuple2s = flatRDD1.collect();
+
+        for (Tuple2<String,String> tuple : firstTuple2s){
+            try {
+                buildGraph.call(tuple);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        List<Tuple2<String,String>> secondTuple2s = flatRDD2.collect();
+
+        for (Tuple2<String,String> tuple : secondTuple2s){
+            try {
+                buildGraph.call(tuple);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+
+        List<Set<String>> connectedSets = inspector.connectedSets();
+
+        // create a new JavaPAirRDD for the resuls...
+
+        List<Tuple2<String, Iterable<String>>> results = new ArrayList<>();
+
+        for ( Set<String> subset : connectedSets){
+
+            Tuple2 t2 = new Tuple2(subset.iterator().next(),subset);
+
+            results.add(t2);
+
+        }
+
+        return sc.parallelizePairs(results);
+
+
+    }
+
+    private void buildGraph(UndirectedGraph<String, DefaultEdge> graph, Tuple2<String, String> t) {
+
+       // System.out.println(graph);
     }
 
     /** Calculate all vs all pairwise comparisons for a fraction of all results.
@@ -173,13 +253,14 @@ public class ClusterSequences implements Serializable {
      * @param fraction
      * @param fractionIndex
      */
-    private JavaPairRDD calculateAvaOnFractions(JavaSparkContext sc,
+    private JavaPairRDD<String,Iterable<Tuple5>>
+                calculateAvaOnFractions(JavaSparkContext sc,
                                          JavaPairRDD<String, String> sequences,
                                          JavaPairRDD<Integer, List<String>> fraction,
                                          Integer fractionIndex) {
 
 
-        System.out.println(" # Fraction: " + fraction );
+        System.out.println(" # Fraction " + fractionIndex + "  total : " + fraction.count() + " sequences" );
 
         JavaPairRDD<Integer,List<String>> partial =
                 fraction.filter(t -> fractionIndex.equals( t._1()));
@@ -201,7 +282,6 @@ public class ClusterSequences implements Serializable {
             }
         });
 
-
         // sort alphabetically
         flat = flat.sortBy(new Function<String, String>() {
             @Override
@@ -212,7 +292,21 @@ public class ClusterSequences implements Serializable {
 
         List<String> vals = flat.collect();
 
-        System.out.println(vals);
+        if ( vals.size() == 1) {
+
+            String id = vals.get(0);
+            // no need to cluster, there is only one member!
+            Tuple5<String,String,Float,Float,Float> t5 = new Tuple5(id,id,1.0f,1.0f,1.0f);
+            List<Tuple5<String,String,Float,Float,Float>> t5list = new ArrayList<>();
+
+            t5list.add(t5);
+
+            JavaRDD<Tuple5<String,String,Float,Float,Float>> singlerrd = sc.parallelize(t5list);
+
+            return getFilteredClusters(singlerrd);
+        }
+
+        //System.out.println(vals);
 
         // share the list of IDs to compute with all Spark nodes
         Broadcast<List<String>> broadcastPartialIds = sc.broadcast(vals);
@@ -225,7 +319,7 @@ public class ClusterSequences implements Serializable {
 
         long n = fractionSequences.count();
 
-        System.out.println(" # Calculating combinations for N: " + n + " sequences (" + (n+(n-1)/2) + " combinations)");
+        System.out.println(" #F" + fractionIndex +" Calculating combinations for N: " + n + " sequences (" + (n+(n-1)/2) + " combinations)");
 
         //fractionSequences.foreach(t-> System.out.println("subset:" + t._1()));
 
@@ -239,7 +333,16 @@ public class ClusterSequences implements Serializable {
 
         // do the actuall all vs. all on this fraction of the sequecnes
         JavaRDD<Tuple5<String,String,Float,Float,Float>> fractionResult = combinations.map(smithWaterman);
+        return getFilteredClusters(fractionResult);
+    }
 
+
+    /** Take a 'raw' result from the all vs. all comparison and convert into clusters
+     *
+     * @param fractionResult
+     * @return a clustered representation of the data.
+     */
+    private JavaPairRDD<String, Iterable<Tuple5>> getFilteredClusters(JavaRDD<Tuple5<String, String, Float, Float, Float>> fractionResult) {
         //fractionResult.foreach(t-> System.out.println("Result: " + t));
 
 

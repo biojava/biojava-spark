@@ -5,7 +5,7 @@ package org.biojava.spark.function;
  */
 
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.PairFunction;
+
 import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.alignment.SimpleGapPenalty;
 import org.biojava.nbio.alignment.template.GapPenalty;
@@ -17,11 +17,10 @@ import org.biojava.nbio.core.alignment.template.SubstitutionMatrix;
 import org.biojava.nbio.core.sequence.ProteinSequence;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import scala.Tuple2;
-import scala.Tuple4;
+
 import scala.Tuple5;
 
-import java.io.Serializable;
-import java.util.List;
+
 
 
 /**
@@ -52,9 +51,13 @@ public class PairwiseSequenceComparison implements Function<Tuple2<Tuple2<String
         ProteinSequence prot2 = new ProteinSequence(p2._2());
 
         try {
-            PairwiseSequenceAligner<ProteinSequence, AminoAcidCompound> smithWaterman = Alignments.getPairwiseAligner(prot1,
-                    prot2,
-                    Alignments.PairwiseSequenceAlignerType.LOCAL, penalty, matrix);
+            PairwiseSequenceAligner<ProteinSequence, AminoAcidCompound> smithWaterman =
+                    Alignments.getPairwiseAligner(
+                            prot1,
+                            prot2,
+                            Alignments.PairwiseSequenceAlignerType.LOCAL,
+                            penalty,
+                            matrix);
 
             SequencePair<ProteinSequence, AminoAcidCompound> alignment = smithWaterman.getPair();
 
