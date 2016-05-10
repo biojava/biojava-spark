@@ -1,7 +1,7 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
-import org.biojava.spark.data.SegmentClusters;
-import org.biojava.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.data.SegmentClusters;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * Generate fragments and group them by their sequence.

@@ -1,8 +1,8 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
 
-import org.biojava.spark.data.SparkUtils;
-import org.biojava.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * Example of mapping the PDB to chains of just C-alpha coords.

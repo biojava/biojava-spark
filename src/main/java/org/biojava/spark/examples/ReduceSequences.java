@@ -1,4 +1,4 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.biojava.spark.data.SparkUtils;
+import org.rcsb.mmtf.spark.SparkUtils;
 
 import scala.Tuple2;
 

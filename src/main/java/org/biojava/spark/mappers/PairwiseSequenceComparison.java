@@ -1,4 +1,4 @@
-package org.biojava.spark.pair;
+package org.biojava.spark.mappers;
 
 /**
  * Created by ap3 on 29/04/2016.

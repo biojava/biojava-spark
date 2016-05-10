@@ -1,4 +1,4 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
 import java.util.ArrayList;
 import java.util.List;

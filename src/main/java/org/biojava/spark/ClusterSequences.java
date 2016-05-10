@@ -8,7 +8,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
-import org.biojava.spark.pair.PairwiseSequenceComparison;
+import org.biojava.spark.mappers.PairwiseSequenceComparison;
+
 import scala.Tuple2;
 import scala.Tuple5;
 

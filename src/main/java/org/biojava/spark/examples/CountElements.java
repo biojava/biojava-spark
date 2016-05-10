@@ -1,9 +1,10 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
 import java.util.Map;
 
-import org.biojava.spark.data.SparkUtils;
-import org.biojava.spark.data.StructureDataRDD;
+import org.biojava.spark.BiojavaSparkUtils;
+import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * An example reading the PDB and finding the mean frequency of 
@@ -22,9 +23,7 @@ public class CountElements {
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 		
-		Map<String, Long> elementCountMap = new StructureDataRDD()
-				.findAtoms()
-				.countByElement();
+		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD()).countByElement();
 		System.out.println("\nElement map"+elementCountMap);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();

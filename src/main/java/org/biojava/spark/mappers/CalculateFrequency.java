@@ -1,9 +1,11 @@
-package org.biojava.spark.data;
+package org.biojava.spark.mappers;
 
 
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.biojava.nbio.structure.Atom;
+import org.biojava.spark.BiojavaSparkUtils;
 import org.rcsb.mmtf.api.StructureDataInterface;
+import org.rcsb.mmtf.spark.data.AtomSelectObject;
 
 import scala.Tuple2;
 
@@ -36,7 +38,7 @@ public class CalculateFrequency  implements FlatMapFunction<Tuple2<String,Struct
 	public Iterable<Atom> call(Tuple2<String, StructureDataInterface> t) throws Exception {
 		StructureDataInterface structure = t._2;
 		// Get the atoms
-		return SparkUtils.getAtoms(structure, selectObject);
+		return BiojavaSparkUtils.getAtoms(structure, selectObject);
 	}
 
 

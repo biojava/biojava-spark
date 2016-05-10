@@ -1,9 +1,10 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
 
-import org.biojava.spark.data.AtomSelectObject;
-import org.biojava.spark.data.SparkUtils;
-import org.biojava.spark.data.StructureDataRDD;
+import org.biojava.spark.BiojavaSparkUtils;
+import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.data.AtomSelectObject;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * An example reading the PDB and finding the mean C-alpha
@@ -23,8 +24,8 @@ public class CountContacts {
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 		// Get the atom contacts
-		Double mean = new StructureDataRDD()
-				.findContacts(new AtomSelectObject()
+		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD(),
+				new AtomSelectObject()
 						.groupNameList(new String[] {"PRO","LYS"})
 						.elementNameList(new String[] {"C"})
 						.atomNameList(new String[] {"CA"}),

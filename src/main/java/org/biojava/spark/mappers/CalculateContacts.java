@@ -1,4 +1,4 @@
-package org.biojava.spark.data;
+package org.biojava.spark.mappers;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -8,7 +8,9 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
+import org.biojava.spark.BiojavaSparkUtils;
 import org.rcsb.mmtf.api.StructureDataInterface;
+import org.rcsb.mmtf.spark.data.AtomSelectObject;
 
 import scala.Tuple2;
 
@@ -60,11 +62,11 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 	 */
 	private List<AtomContact> getDist(StructureDataInterface structure, String pdbCode, double cutoff) {
 		List<AtomContact> outList  = new ArrayList<>();;
-		List<Atom> atomListTwo = SparkUtils.getAtoms(structure, selectObjectOne);
+		List<Atom> atomListTwo = BiojavaSparkUtils.getAtoms(structure, selectObjectOne);
 		if(atomListTwo.size()>0){
-			List<Atom> atomListOne = SparkUtils.getAtoms(structure, selectObjectTwo);
+			List<Atom> atomListOne = BiojavaSparkUtils.getAtoms(structure, selectObjectTwo);
 			if(atomListOne.size()>0){
-				AtomContactSet atomContactSet = SparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
+				AtomContactSet atomContactSet = BiojavaSparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
 				for(AtomContact atomContact : atomContactSet){
 					// Maybe add a filter here to ensure they're not 
 					// in the same group

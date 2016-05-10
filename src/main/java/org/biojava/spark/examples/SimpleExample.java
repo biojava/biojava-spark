@@ -1,7 +1,7 @@
-package org.biojava.examples;
+package org.biojava.spark.examples;
 
-import org.biojava.spark.data.SparkUtils;
-import org.biojava.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * A very simple example reading the PDB and finding the number
