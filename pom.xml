@@ -97,8 +97,6 @@
 			<artifactId>spark-csv_${scala.version}</artifactId>
 			<version>1.2.0</version>
 		</dependency>
-
-
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava-structure</artifactId>
