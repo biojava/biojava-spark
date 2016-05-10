@@ -23,8 +23,7 @@ public class ChainExample {
 	public static void main(String[] args) throws IOException {
 //		SegmentDataRDD calphaChains = SparkUtils.getCalphaChains(new String[] {"1AQ1", "4CUP"});
 		SegmentDataRDD calphaChains = new StructureDataRDD(
-				SparkUtils.getStructureDataRdd("/Users/anthony/full"))
-				.getCalpha();
+				SparkUtils.getStructureDataRdd("/Users/anthony/full")).getCalpha();
 		System.out.println(calphaChains.getLengthDist().mean());	
 	}
 

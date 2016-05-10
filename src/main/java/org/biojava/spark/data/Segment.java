@@ -1,12 +1,19 @@
 package org.biojava.spark.data;
 
+import java.io.Serializable;
+
 import javax.vecmath.Point3d;
 /**
  * Simple data structure for segments of proteins, e.g. fragments and chains.
  * @author Anthony Bradley
  *
  */
-public class Segment {
+public class Segment implements Serializable {
+
+	/**
+	 * The serial id for this version of the class.
+	 */
+	private static final long serialVersionUID = 6036726463051044340L;
 
 	/**
 	 * Constructor for the {@link Segment} object.

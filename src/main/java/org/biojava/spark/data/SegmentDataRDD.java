@@ -13,6 +13,10 @@ import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.ProteinSequence;
 import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 
+import scala.Tuple2;
+
+
+
 /**
  * A class to hold information and utilities around {@link Segment} 
  * information.
@@ -125,10 +129,13 @@ public class SegmentDataRDD {
 	 * @param the similarity (e.g. sequence identity) to permit
 	 * @return the {@link SegmentDataRDD} of non-redundant sequences
 	 */
-	public SegmentDataRDD groupBySequence() {
-		return new SegmentDataRDD(segmentRDD.mapToPair(t -> new Tuple2<String,Segment>(t._2.getSequence, t._2))
-		.groupByKey());
-	}	
-	
+	public SegmentClusters groupBySequence() {
+		JavaPairRDD<String, Segment> seqMap = segmentRDD.mapToPair(t -> {
+			String sequence = t._2.getSequence();
+			Segment segment = t._2;
+			return new Tuple2<String,Segment>(sequence, segment);
+		});
+		return new SegmentClusters(seqMap.groupByKey());
+	}
 	
 }
