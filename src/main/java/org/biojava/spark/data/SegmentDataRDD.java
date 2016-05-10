@@ -118,7 +118,17 @@ public class SegmentDataRDD {
 	public SegmentDataRDD findRedundantSet(double similarity) {
 		System.err.println("Currently not functioning");
 		return new SegmentDataRDD(segmentRDD);
-		
 	}
+	
+	/**
+	 * Group by sequence identity.
+	 * @param the similarity (e.g. sequence identity) to permit
+	 * @return the {@link SegmentDataRDD} of non-redundant sequences
+	 */
+	public SegmentDataRDD groupBySequence() {
+		return new SegmentDataRDD(segmentRDD.mapToPair(t -> new Tuple2<String,Segment>(t._2.getSequence, t._2))
+		.groupByKey());
+	}	
+	
 	
 }
