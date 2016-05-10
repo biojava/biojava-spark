@@ -2,7 +2,7 @@ package org.biojava.spark.data;
 
 import java.util.Map;
 
-import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.biojava.nbio.structure.Group;
 
 /**
@@ -12,16 +12,17 @@ import org.biojava.nbio.structure.Group;
  */
 public class GroupDataRDD {
 	
-	/** The {@link JavaRDD} of {@link Group} to be used internally to the class. */
-	private JavaRDD<Group> groupRdd;
+	/** The {@link JavaPairRDD} of {@link Group} to be used internally to the class. 
+	 * The String is the name of the Group. */
+	private JavaPairRDD<String, Group> groupRdd;
 	
 	
 	
 	/**
-	 * Constructor of the RDD from a {@link JavaRDD} of {@link Group}
-	 * @param groupRdd the input {@link JavaRDD} of {@link Group}
+	 * Constructor of the RDD from a {@link JavaPairRDD} of {@link Group}
+	 * @param groupRdd the input {@link JavaPairRDD} of {@link Group}
 	 */
-	public GroupDataRDD(JavaRDD<Group> groupRdd) {
+	public GroupDataRDD(JavaPairRDD<String, Group> groupRdd) {
 		this.groupRdd = groupRdd.cache();
 	}
 	
@@ -34,10 +35,10 @@ public class GroupDataRDD {
 	}
 	
 	/**
-	 * Get the {@link JavaRDD} of {@link Group} data.
-	 * @return the {@link JavaRDD} of {@link Group} data
+	 * Get the {@link JavaPairRDD} of {@link Group} data.
+	 * @return the {@link JavaPairRDD} of {@link Group} data
 	 */
-	public JavaRDD<Group> getGroupRdd() {
+	public JavaPairRDD<String, Group> getGroupRdd() {
 		return groupRdd;
 	}
 	
@@ -48,7 +49,7 @@ public class GroupDataRDD {
 	 */
 	public Map<String, Long> countByGroupName() {
 		return groupRdd
-		.map(t -> t.getPDBName())
+		.map(t -> t._2.getPDBName())
 		.countByValue();
 	}
 	
@@ -60,7 +61,7 @@ public class GroupDataRDD {
 	public AtomDataRDD getAtoms() {
 		return new AtomDataRDD(
 				groupRdd
-				.flatMap(t -> t.getAtoms()));
+				.flatMap(t -> t._2.getAtoms()));
 	}
 
 }

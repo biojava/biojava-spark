@@ -13,8 +13,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.partial.BoundedDouble;
+import org.apache.spark.partial.PartialResult;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.encoder.DefaultEncoder;
@@ -173,26 +174,29 @@ public class StructureDataRDD {
 	}
 
 	/**
-	 * Get the chains for this list of {@link StructureDataInterface}.
-	 * @return the chains as {@link ChainDataRDD} of {@link Chain}
-	 */
-	public ChainDataRDD findChains() {
-		return new ChainDataRDD(
-				javaPairRdd.flatMap(new GetChains()));
-	}
-
-
-	/**
 	 * Get the {@link Point3d} of the C-alpha co-ordinate data
 	 * as lightweight point 3d objects.
-	 * @return the {@link JavaPairRDD} {@link String} {@link Point3d} 
+	 * @return the {@link JavaPairRDD} {@link String} 
 	 * array
 	 */
-	public JavaPairRDD<String, Point3d[]> getCalphaPair() {	
-
+	public JavaPairRDD<String, Segment> getCalphaPair() {	
 		return javaPairRdd
-				.flatMapToPair(new Point3dCalpha());
+				.flatMapToPair(new Point3dCalpha(null));
 	}
+	
+	/**
+	 * Get the {@link Point3d} of the C-alpha co-ordinate data
+	 * as lightweight point 3d objects. Fragmented based on size. The fragments
+	 * are continuous and overlapping.
+	 * @param fragSize the size of every fragment
+	 * @return the {@link JavaPairRDD} {@link String} {@link Point3d} 
+	 * array of fragments
+	 */
+	public JavaPairRDD<String, Segment> getFragments(int fragSize) {	
+		return javaPairRdd
+				.flatMapToPair(new Point3dCalpha(fragSize));
+	}
+
 
 	/**
 	 * Get the number of entries in the RDD.
@@ -201,6 +205,17 @@ public class StructureDataRDD {
 	public Long size() {
 		return javaPairRdd
 				.count();
+	}
+	
+	/**
+	 * Get the number of entries in the RDD.
+	 * @return the {@link Long} number of entries
+	 */
+	public Long quickSize() {
+		PartialResult<BoundedDouble> result = javaPairRdd
+				.countApprox(1000);
+		return (long) Integer.parseInt(
+				Double.toString(result.getFinalValue().mean()));
 	}
 
 
@@ -229,5 +244,6 @@ public class StructureDataRDD {
 	public StructureDataRDD sample(double fraction) {
 		return new StructureDataRDD(javaPairRdd.sample(false, fraction));
 	}
+	
 
 }

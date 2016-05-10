@@ -58,7 +58,7 @@ public class SparkUtils {
 	private static JavaSparkContext javaSparkContext = null;
 	/** Where to get the data from. */
 	public static final String URL_LOCATION = "http://mmtf.rcsb.org/v0/hadoopfiles/full.tar";
-	private static final String hadoopBase = "hadoop/v0";
+	private static final String hadoopBase = "/hadoop/v0";
 	private static final String pdbFileName = "full";
 	private static final String tarFileName = "full.tar";
 
@@ -100,6 +100,15 @@ public class SparkUtils {
 				.mapToPair(t -> new Tuple2<String, MmtfStructure>(t._1, new MessagePackSerialization().deserialize(new ByteArrayInputStream(t._2))))
 				// Roughly a minute
 				.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1,  new DefaultDecoder(t._2)));
+	}
+	
+	/**
+	 * Get the {@link StructureDataRDD} from a file path.
+	 * @param filePath the input file path
+	 * @return the {@link StructureDataRDD} object
+	 */
+	public static StructureDataRDD getStructureObj(String filePath) {
+		return new StructureDataRDD(getStructureDataRdd(filePath));
 	}
 
 	/**

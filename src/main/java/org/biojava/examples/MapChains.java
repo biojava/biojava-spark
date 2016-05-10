@@ -27,7 +27,7 @@ public class MapChains {
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalphaPair()
-				.mapToDouble(t -> t._2.length)
+				.mapToDouble(t -> t._2.getStructure().length)
 				.mean();
 		
 		System.out.println("\n"+meanCalphaLength+" is the mean C-alpha length in the PDB");

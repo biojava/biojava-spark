@@ -1,41 +1,44 @@
 package org.biojava.spark.data;
 
-import javax.vecmath.Point3d;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.EntityType;
 import org.biojava.nbio.structure.Group;
 
+import scala.Tuple2;
+
 /**
  * The class to provide functions on chains using the 
- * {@link JavaRDD} of {@link Chain}.
+ * {@link JavaPairRDD} of {@link Chain}.
  * @author Anthony Bradley
  *
  */
 public class ChainDataRDD {
-	
-	/** The {@link JavaRDD} of {@link Chain} internally. */
-	private JavaRDD<Chain> chainDataRDD;
-	
+
+	/** The {@link JavaPairRDD} of {@link Chain} internally. */
+	private JavaPairRDD<String,Chain> chainDataRDD;
+
 	/**
 	 * The constructore of the {@link ChainDataRDD} using a
-	 * {@link JavaRDD} of type {@link Chain}.
-	 * @param chainDataRDD the input {@link JavaRDD} of {@link Chain}
+	 * {@link JavaPairRDD} of type {@link Chain}.
+	 * @param chainDataRDD the input {@link JavaPairRDD} of {@link Chain}
 	 */
-	public ChainDataRDD(JavaRDD<Chain> chainDataRDD) {
+	public ChainDataRDD(JavaPairRDD<String,Chain> chainDataRDD) {
 		this.chainDataRDD = chainDataRDD;
 	}
-	
+
 	/**
-	 * Get the {@link JavaRDD} of the {@link Chain} objects.
-	 * @return the {@link JavaRDD} of the {@link Chain} objects
+	 * Get the {@link JavaPairRDD} of the {@link Chain} objects.
+	 * @return the {@link JavaPairRDD} of the {@link Chain} objects
 	 */
-	public JavaRDD<Chain> getRDD() {
+	public JavaPairRDD<String,Chain> getRDD() {
 		return this.chainDataRDD;
 	}
-	
+
 	/**
 	 * Get only the polymer chains.
 	 * @return a {@link ChainDataRDD} of {@link Chain} only
@@ -43,9 +46,9 @@ public class ChainDataRDD {
 	 */
 	public ChainDataRDD getPolymerChains() {
 		return new ChainDataRDD(this.chainDataRDD.filter(
-				t -> t.getEntityInfo().getType().equals(EntityType.POLYMER)));
+				t -> t._2.getEntityInfo().getType().equals(EntityType.POLYMER)));
 	}
-	
+
 	/**
 	 * Get only the non-polymer chains.
 	 * @return a {@link ChainDataRDD} of {@link Chain} only
@@ -53,9 +56,9 @@ public class ChainDataRDD {
 	 */
 	public ChainDataRDD getNonPolymerChains() {
 		return new ChainDataRDD(this.chainDataRDD.filter(
-				t -> t.getEntityInfo().getType().equals(EntityType.NONPOLYMER)));
+				t -> t._2.getEntityInfo().getType().equals(EntityType.NONPOLYMER)));
 	}
-	
+
 	/**
 	 * Get only the water chains.
 	 * @return a {@link ChainDataRDD} of {@link Chain} only
@@ -63,18 +66,22 @@ public class ChainDataRDD {
 	 */
 	public ChainDataRDD getWaterChains() {
 		return new ChainDataRDD(this.chainDataRDD.filter(
-				t -> t.getEntityInfo().getType().equals(EntityType.WATER)));
+				t -> t._2.getEntityInfo().getType().equals(EntityType.WATER)));
 	}
-	
-	
+
+
 	/**
 	 * Get the {@link Group} objects as an {@link GroupDataRDD}.
 	 * @return a {@link GroupDataRDD} of {@link Group} objects.
 	 */
 	public GroupDataRDD getGroups() {
 		return new GroupDataRDD(chainDataRDD
-				.flatMap(t -> t.getAtomGroups()));
+				.flatMapToPair(tuple -> {
+					List<Tuple2<String, Group>> outList = new ArrayList<>();
+					for(Group group :  tuple._2.getAtomGroups()) {
+						outList.add(new Tuple2<String, Group>(group.getPDBName(), group));
+					}
+					return outList;
+				}));
 	}
-	
-	
 }

@@ -2,9 +2,7 @@ package org.biojava.examples;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 
-import org.biojava.spark.data.SparkUtils;
 import org.biojava.spark.data.StructureDataRDD;
 
 /** 

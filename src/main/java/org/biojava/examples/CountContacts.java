@@ -13,7 +13,6 @@ import org.biojava.spark.data.StructureDataRDD;
  */
 public class CountContacts {
 
-
 	/**
 	 * An example reading the PDB and finding the mean C-alpha
 	 * to C-alpha distance between Proline and Lysine.
