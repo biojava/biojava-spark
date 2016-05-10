@@ -8,6 +8,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.broadcast.Broadcast;
+import org.biojava.spark.filter.FilterCombinations;
+import org.biojava.spark.filter.FilterRemainingSequences;
+import org.biojava.spark.filter.FilterSignificantResults;
 import org.biojava.spark.function.*;
 import scala.Tuple2;
 import scala.Tuple5;
