@@ -27,6 +27,7 @@ public class MapChains {
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalpha()
+				.getSegmentRDD()
 				.mapToDouble(t -> t._2.getStructure().length)
 				.mean();
 		
