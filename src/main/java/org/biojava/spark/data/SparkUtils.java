@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,7 @@ import org.rcsb.mmtf.decoder.DefaultDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
+import org.rcsb.mmtf.utils.CodecUtils;
 
 import scala.Tuple2;
 
@@ -427,5 +429,54 @@ public class SparkUtils {
 			tarEntry = tarInputStream.getNextTarEntry();
 		}
 		tarInputStream.close();
+	}
+	
+	
+	/**
+	 * Get the Calpha chains for a few structures as a SegmentDataRDD.
+	 * @param inputIds the list of input ids as strings
+	 * @throws IOException due to reading from the MMTF url
+	 */
+	public static SegmentDataRDD getCalphaChains(String[] inputIds) throws IOException {
+
+		// Load these structures
+		List<Tuple2<String, byte[]>> totalList = new ArrayList<>();
+		for(String pdbId : inputIds) {
+			totalList.add(new Tuple2<String, byte[]>(pdbId, getDataAsByteArray(pdbId)));
+		}
+		// Parrelise and return as RDD
+		StructureDataRDD structureDataRDD = new StructureDataRDD(getSparkContext().parallelizePairs(totalList)
+				.mapToPair(t -> new Tuple2<String, byte[]>(t._1.toString(), ReaderUtils.deflateGzip(t._2)))
+				// Roughly a minute 
+				.mapToPair(t -> new Tuple2<String, MmtfStructure>(t._1, new MessagePackSerialization().deserialize(new ByteArrayInputStream(t._2))))
+				.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1,  new DefaultDecoder(t._2))));
+		return structureDataRDD.getCalpha();	
+	}
+	
+	
+	/**
+	 * Helper function to get the data for a PDB id as an gzip compressed byte array.
+	 * Data is retrieved from the REST service. This should be moved to mmtf for the next release.
+	 * @param pdbCode the input PDB id
+	 * @return the gzip compressed byte array for this structure
+	 * @throws IOException  due to retrieving data from the URL
+	 */
+	private static byte[] getDataAsByteArray(String pdbCode) throws IOException {
+		
+		// Get these as an inputstream
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		InputStream is = null;
+		URL url = new URL(CodecUtils.BASE_URL + pdbCode);
+		try {
+			is = url.openStream();
+			byte[] byteChunk = new byte[2048]; // Or whatever size you want to read in at a time.
+			int n;
+			while ( (n = is.read(byteChunk)) > 0 ) {
+				baos.write(byteChunk, 0, n);
+			}
+		} finally {
+			if (is != null) { is.close(); }
+		}
+		return baos.toByteArray();
 	}
 }

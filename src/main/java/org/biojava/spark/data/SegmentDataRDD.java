@@ -1,5 +1,6 @@
 package org.biojava.spark.data;
 
+import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.alignment.Alignments.PairwiseSequenceAlignerType;
@@ -39,6 +40,14 @@ public class SegmentDataRDD {
 	 */
 	public JavaPairRDD<String, Segment> getSegmentRDD() {
 		return segmentRDD;
+	}
+	
+	/**
+	 * Get the length distribution of this RDD.
+	 * @return the {@link JavaDoubleRDD} of the lengths
+	 */
+	public JavaDoubleRDD getLengthDist() {
+		return segmentRDD.mapToDouble(t -> t._2.getStructure().length);
 	}
 	
 	
