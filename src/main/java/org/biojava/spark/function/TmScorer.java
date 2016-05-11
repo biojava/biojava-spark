@@ -68,7 +68,6 @@ public class TmScorer implements Serializable {
 	private static Atom[] getCaAtoms(Segment segment) {
 
 		Point3d[] points = segment.getCoordinates();
-		String sequence = segment.getSequence();
 		Chain chain = new ChainImpl();
 		chain.setId(CHAIN_NAME);	
 		chain.setName(CHAIN_NAME);
