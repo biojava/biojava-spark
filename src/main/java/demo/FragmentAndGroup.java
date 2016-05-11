@@ -1,4 +1,4 @@
-package org.biojava.spark.examples;
+package demo;
 
 import org.rcsb.mmtf.spark.data.SegmentClusters;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;

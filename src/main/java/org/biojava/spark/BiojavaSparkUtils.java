@@ -269,5 +269,14 @@ public class BiojavaSparkUtils {
 			return true;
 		}));
 	}
+	
+//	/**
+//	 * Get the data as a {@link GroupDataRDD} that can be used for finding 
+//	 * features on a group level.
+//	 * @return the group data as a {@link GroupDataRDD}
+//	 */
+//	public GroupDataRDD getGroupData() {
+//		return new GroupDataRDD(javaPairRdd.flatMapToPair(new CollectGroups()));
+//	}
 
 }
