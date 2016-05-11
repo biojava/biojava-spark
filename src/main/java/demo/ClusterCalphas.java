@@ -3,11 +3,14 @@ package demo;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.mllib.clustering.PowerIterationClustering;
 import org.apache.spark.mllib.clustering.PowerIterationClusteringModel;
 import org.rcsb.mmtf.spark.SparkUtils;
 import org.rcsb.mmtf.spark.data.Segment;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 import scala.Tuple2;
 import scala.Tuple3;
@@ -26,20 +29,24 @@ public class ClusterCalphas {
 	 */
 	public static void main(String[] args) throws IOException {
 		// Get the underlying C-alpha chains
-		List<Tuple2<String, Segment>> calphaChains = SparkUtils.getCalphaChains(new String[] {"1AQ1", "4CUP"}).filterMinLength(10).getSegmentRDD().collect();
-		int numChains = calphaChains.size();
+//		List<Tuple2<String, Segment>> calphaChains = SparkUtils.getCalphaChains(new String[] {"4CUP","4CUQ","4CUT","4CUR","4CUS","1STP"}).filterMinLength(10).getSegmentRDD().collect();
+		List<Tuple2<String, Segment>> listChains = new StructureDataRDD("/Users/anthony/full").sample(0.01).getCalpha().getSegmentRDD().collect();
+		int numChains = listChains.size();
+		Broadcast<List<Tuple2<String, Segment>>> calphaChains = SparkUtils.getSparkContext().broadcast(listChains);
+		System.out.println("Analysisng " + numChains + " chains");
 		// Now apply a function to those chains 
-		JavaRDD<Tuple3<Long, Long, Double>> similarities = SparkUtils.getComparisonMatrix(numChains).map(new TmScore(calphaChains));
+		JavaPairRDD<Integer, Integer> comparisons = SparkUtils.getComparisonMatrix(numChains);
+		System.out.println("Performing "+comparisons.count()+" comparisons");
+		JavaRDD<Tuple3<Long, Long, Double>> similarities = comparisons.map(new TmScore(calphaChains));
+		// Perform the clusterings
 		PowerIterationClustering pic = new PowerIterationClustering()
-				.setK(2)
-				.setMaxIterations(10);
+				.setK(10)
+				.setMaxIterations(100);
+		
 		// Now produce the model
 		PowerIterationClusteringModel model = pic.run(similarities);
 		for (PowerIterationClustering.Assignment a: model.assignments().toJavaRDD().collect()) {
-			System.out.println(a.id() + " -> " + a.cluster());
+			System.out.println(calphaChains.getValue().get((int) a.id())._1 + " -> " + a.cluster());
 		}
 	}
-
-
-
 }
