@@ -45,7 +45,9 @@ public class DemoClusterSequences implements Serializable{
     // break up the calculation in 10 fractions
     // each fraction will have the all vs. all calculation performed
     // and clustering will be merged
-    private static final int nrFractions = 10;
+    private static final int nrFractions = 5;
+
+    private static final int nrIterations = 100;
 
     public static void main(String[] args){
 
@@ -147,7 +149,7 @@ public class DemoClusterSequences implements Serializable{
         long timeS = System.currentTimeMillis();
         ClusterSequences cluster = new ClusterSequences(nrFractions, MIN_OVERLAP, MIN_OVERLAP,MIN_PERCID );
 
-        JavaPairRDD<String,Iterable<String>> results = cluster.clusterSequences(sc,sequences,5);
+        JavaPairRDD<String,Iterable<String>> results = cluster.clusterSequences(sc,sequences,nrIterations);
 
         int totalCount = 0;
         if ( results != null && ! results.isEmpty())
@@ -157,6 +159,9 @@ public class DemoClusterSequences implements Serializable{
 
 
         List<Tuple2<String,Iterable<String>>>  clusters = results.collect();
+
+        System.out.println("Got " + clusters.size() + " sequence clusters.");
+
 
         PrintClusterInfo printClusterInfo = new PrintClusterInfo(clusters);
 

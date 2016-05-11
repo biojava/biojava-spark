@@ -82,11 +82,8 @@ public class ClusterSequences implements Serializable {
 
         Set<Integer> fractionKeys = fractions.keySet();
 
-        //JavaRDD uniqueKeys = randomStringRDD.map(t->t._1).distinct();
-
         JavaPairRDD<Integer,List<String>> fraction = randomKeys.groupByKey();
 
-        List<JavaPairRDD> fractionResults = new ArrayList<JavaPairRDD>();
 
         JavaRDD<String> allKeys = sc.emptyRDD();
 
@@ -96,15 +93,17 @@ public class ClusterSequences implements Serializable {
 
         for ( Integer fractionIndex : fractionKeys) {
 
-            JavaPairRDD<String,Iterable<Tuple5>> results = calculateAvaOnFractions(sc, sequences, fraction, fractionIndex);
+            JavaPairRDD<String,Iterable<Tuple5<String,String,Float,Float,Float>>> results = calculateAvaOnFractions(sc, sequences, fraction, fractionIndex);
 
-            fractionResults.add(results);
+            results.foreach(stringIterableTuple2 -> System.out.println("   got results : " + stringIterableTuple2));
+
+            //fractionResults.add(results);
 
 
             // e.g (A, B), (A,C) which are part of the cluster ( A, [A,B,C] )
-            JavaPairRDD<String,String> clusters = results.flatMapValues(new Function<Iterable<Tuple5>, Iterable<String> >() {
+            JavaPairRDD<String,String> clusters = results.flatMapValues(new Function<Iterable<Tuple5<String,String,Float,Float,Float>>, Iterable<String> >() {
                 @Override
-                public Iterable<String> call(Iterable<Tuple5> tuple5s) throws Exception {
+                public Iterable<String> call(Iterable<Tuple5<String,String,Float,Float,Float>> tuple5s) throws Exception {
                     List<String> l = new ArrayList<String>();
                     for (Tuple5 t:tuple5s){
                         l.add(t._2().toString());
@@ -253,7 +252,7 @@ public class ClusterSequences implements Serializable {
      * @param fraction
      * @param fractionIndex
      */
-    private JavaPairRDD<String,Iterable<Tuple5>>
+    private JavaPairRDD<String,Iterable<Tuple5<String,String,Float,Float,Float>>>
                 calculateAvaOnFractions(JavaSparkContext sc,
                                          JavaPairRDD<String, String> sequences,
                                          JavaPairRDD<Integer, List<String>> fraction,
@@ -292,6 +291,9 @@ public class ClusterSequences implements Serializable {
 
         List<String> vals = flat.collect();
 
+        //System.out.println(" vals: " + vals);
+
+
         if ( vals.size() == 1) {
 
             String id = vals.get(0);
@@ -324,6 +326,7 @@ public class ClusterSequences implements Serializable {
         //fractionSequences.foreach(t-> System.out.println("subset:" + t._1()));
 
         // cartesian gives us the cartesian product (full matrix)
+
         JavaPairRDD cartesian = fractionSequences.cartesian(fractionSequences);
 
         // now we want to filter this matrix and only take one half
@@ -333,6 +336,7 @@ public class ClusterSequences implements Serializable {
 
         // do the actuall all vs. all on this fraction of the sequecnes
         JavaRDD<Tuple5<String,String,Float,Float,Float>> fractionResult = combinations.map(smithWaterman);
+
         return getFilteredClusters(fractionResult);
     }
 
@@ -342,22 +346,80 @@ public class ClusterSequences implements Serializable {
      * @param fractionResult
      * @return a clustered representation of the data.
      */
-    private JavaPairRDD<String, Iterable<Tuple5>> getFilteredClusters(JavaRDD<Tuple5<String, String, Float, Float, Float>> fractionResult) {
+    private JavaPairRDD<String, Iterable<Tuple5<String,String,Float,Float,Float>>> getFilteredClusters(JavaRDD<Tuple5<String, String, Float, Float, Float>> fractionResult) {
         //fractionResult.foreach(t-> System.out.println("Result: " + t));
 
 
         // throw away all the things that are not significantly similar
         FilterSignificantResults keepSignificantResults = new FilterSignificantResults(minOverlap1,minOverlap2,minPercentageId);
 
-        fractionResult = fractionResult.filter(keepSignificantResults);
+        JavaRDD<Tuple5<String, String, Float, Float, Float>> significantResults = fractionResult.filter(keepSignificantResults);
 
-        fractionResult.foreach(t-> System.out.println(" - significant:" + t));
+        //fractionResult.foreach(t-> System.out.println(" - significant:" + t));
 
-        JavaPairRDD groupedResults = fractionResult.groupBy(stringStringFloatFloatFloatTuple5 -> stringStringFloatFloatFloatTuple5._1());
+        JavaPairRDD<String, Iterable<Tuple5<String,String,Float,Float,Float>>> groupedResults = significantResults.groupBy(stringStringFloatFloatFloatTuple5 -> stringStringFloatFloatFloatTuple5._1());
 
-        groupedResults.foreach(t-> System.out.println(" - GROUPED:" + t));
+       // groupedResults.foreach(t-> System.out.println(" - GROUPED:" + t));
 
-        return groupedResults;
+
+        // Important, don't throw away the things that did not cluster.
+        // next steps: add those that did not cluster with anything
+
+        JavaRDD<String> allIds = fractionResult.flatMap(new FlatMapFunction<Tuple5<String,String,Float,Float,Float>, String>() {
+            @Override
+            public Iterable<String> call(Tuple5<String, String, Float, Float, Float> tuple5) throws Exception {
+                List<String> lst = new ArrayList<String>();
+                lst.add(tuple5._1());
+                lst.add(tuple5._2());
+                return lst;
+            }
+        }).distinct();
+
+
+        //allIds.foreach(s -> System.out.println(" ALL IDS: " + s));
+
+        JavaRDD<String> clusteredIds = groupedResults.flatMap(new FlatMapFunction<Tuple2<String, Iterable<Tuple5<String,String,Float,Float,Float>>>, String>() {
+            @Override
+            public Iterable<String> call(Tuple2<String, Iterable<Tuple5<String,String,Float,Float,Float>>> tuple2) throws Exception {
+                List<String> lst = new ArrayList<String>();
+                for (Tuple5 t5 : tuple2._2()){
+                    lst.add(t5._1().toString());
+                    lst.add(t5._2().toString());
+                }
+                return lst;
+            }
+        }).distinct();
+
+        //clusteredIds.foreach(s -> System.out.println(" IN THIS CLUSTER: " + s));
+
+        JavaRDD<String> missingIds = allIds.subtract(clusteredIds);
+
+       // missingIds.foreach(s -> System.out.println("missing ID: " + s));
+
+
+        JavaPairRDD<String, Iterable<Tuple5<String,String,Float,Float,Float>>> orphanClusters =
+                missingIds.mapToPair(new PairFunction<String, String,Iterable<Tuple5<String,String,Float,Float,Float>>>() {
+
+                    @Override
+                    public Tuple2<String, Iterable<Tuple5<String, String, Float, Float, Float>>> call(String s) throws Exception {
+
+                        Tuple5<String, String, Float, Float, Float> t5 = new Tuple5(s,s,1.0f,1.0f,1.0f);
+
+                        List<Tuple5<String, String, Float, Float, Float>> lst = new ArrayList<>();
+                        lst.add(t5);
+
+                        Tuple2<String,Iterable<Tuple5<String,String,Float,Float,Float>>> t2 = new Tuple2<>(s,lst);
+
+                        return t2;
+
+
+                    }
+                });
+
+
+        //orphanClusters.foreach(stringIterableTuple2 -> System.out.println("orphan cluster:" + stringIterableTuple2));
+
+        return groupedResults.union(orphanClusters);
     }
 
 
