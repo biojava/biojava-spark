@@ -1,10 +1,10 @@
-package org.biojava.spark.examples;
+package demo;
 
 import java.util.Map;
 
-import org.biojava.spark.BiojavaSparkUtils;
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 /**
  * An example reading the PDB and finding the mean frequency of 

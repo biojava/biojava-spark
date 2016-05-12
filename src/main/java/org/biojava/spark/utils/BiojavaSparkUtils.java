@@ -1,10 +1,13 @@
-package org.biojava.spark;
+package org.biojava.spark.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.vecmath.Point3d;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
@@ -28,6 +31,7 @@ import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.ChainImpl;
 import org.biojava.nbio.structure.Element;
 import org.biojava.nbio.structure.Group;
+import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
@@ -44,10 +48,11 @@ import org.rcsb.mmtf.decoder.DefaultDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
-import org.rcsb.mmtf.spark.SparkUtils;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
+import org.rcsb.mmtf.spark.data.Segment;
 import org.rcsb.mmtf.spark.data.SegmentDataRDD;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 import scala.Tuple2;
 
@@ -58,6 +63,44 @@ import scala.Tuple2;
  */
 public class BiojavaSparkUtils {
 
+	
+	
+	/** The name of the C-Alpha atoms in a group.*/
+	private static final String CA_NAME = "CA";
+	
+	/** The default chain name.*/
+	private static final String CHAIN_NAME = "A";
+	
+	
+	/**
+	 * Gets the C-alpha {@link Atom} for the given input {@link Segment}.
+	 * @param segment the input {@link Segment} object
+	 * @return the C-alpha array of {@link Atom} objects
+	 */
+	public static Atom[] getCaAtoms(Segment segment) {
+		Point3d[] points = segment.getCoordinates();
+		Chain chain = new ChainImpl();
+		chain.setId(CHAIN_NAME);	
+		chain.setName(CHAIN_NAME);
+		Atom[] atoms = new Atom[points.length];
+		for (int i = 0, j = 0; i < points.length; i++) {
+			if (points[i] != null) {
+				atoms[j] = new AtomImpl();
+				atoms[j].setName(CA_NAME);
+				Group group = new AminoAcidImpl();
+				group.setPDBName("GLU");
+				group.addAtom(atoms[j]);
+				group.setChain(chain);
+				group.setResidueNumber(new ResidueNumber(CHAIN_NAME, j, '\0'));
+				atoms[j].setX(points[i].x);
+				atoms[j].setY(points[i].y);
+				atoms[j].setZ(points[i].z);
+				j++;
+			}
+		}
+		return atoms;
+	}
+	
 	/**
 	 * Find the contacts for each structure in the PDB.
 	 * @param selectObjectOne the first type of atoms
@@ -195,7 +238,54 @@ public class BiojavaSparkUtils {
 		return grid.getContacts();
 	}
 
+	
+	/**
+	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
+	 * @param pdbIdList the input list of PDB ids
+	 * @param minLength the minimum length of each chain
+	 * @return the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates
+	 * @throws IOException due to an error reading the input file
+	 */
+	public static JavaPairRDD<String, Atom[]> getChainRDD(List<String> pdbIdList, int minLength) throws IOException {
+		return getChainRDD(new StructureDataRDD(pdbIdList), minLength);
+	}
 
+	/**
+	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
+	 * @param filePath the Haddoop file to read from
+	 * @param minLength the minimum length of each chain
+	 * @param sample the sample of this file to take
+	 * @return the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates
+	 * @throws IOException due to an error reading the input file
+	 */
+	public static JavaPairRDD<String, Atom[]> getChainRDD(String filePath, int minLength, double sample) throws IOException {
+		return getChainRDD(new StructureDataRDD(filePath).sample(sample), minLength);
+	}
+	
+	/**
+	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
+	 * @param pdbIdList the input list of PDB ids
+	 * @return the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates
+	 * @throws IOException due to an error reading the input file
+	 */
+	public static JavaPairRDD<String, Atom[]> getChainRDD(List<String> pdbIdList) throws IOException {
+		return getChainRDD(pdbIdList, 60);
+	}
+	
+	/**
+	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
+	 * @param structureDataRDD the input {@link StructureDataRDD}
+	 * @param minLength the minimum length of each chain
+	 * @return the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates
+	 * @throws IOException due to an error reading the input file
+	 */
+	public static JavaPairRDD<String, Atom[]> getChainRDD(StructureDataRDD structureDataRDD, int minLength) throws IOException {
+		return structureDataRDD
+				.getCalpha()
+				.filterMinLength(minLength).getSegmentRDD()
+				.mapToPair(t -> new Tuple2<String, Atom[]>(t._1, BiojavaSparkUtils.getCaAtoms(t._2)))
+				.cache();
+	}
 
 	/**
 	 * Get all the atoms in the structure using a {@link StructureDataInterface}.
@@ -269,5 +359,6 @@ public class BiojavaSparkUtils {
 			return true;
 		}));
 	}
+
 
 }
