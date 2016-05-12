@@ -89,7 +89,11 @@
 		</dependency>
 
 
-
+		<dependency>
+			<groupId>net.sourceforge.argparse4j</groupId>
+			<artifactId>argparse4j</artifactId>
+			<version>0.7.0</version>
+		</dependency>
 		<!-- for CSV support -->
 		<dependency>
 
@@ -105,7 +109,7 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-spark</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
@@ -121,6 +125,16 @@
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-encoder</artifactId>
 			<version>0.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jgrapht</groupId>
+			<artifactId>jgrapht-core</artifactId>
+			<version>0.9.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jgrapht</groupId>
+			<artifactId>jgrapht-ext</artifactId>
+			<version>0.9.2</version>
 		</dependency>
 	</dependencies>
 

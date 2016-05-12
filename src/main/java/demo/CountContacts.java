@@ -1,10 +1,10 @@
 package demo;
 
 
-import org.biojava.spark.BiojavaSparkUtils;
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 /**
  * An example reading the PDB and finding the mean C-alpha
@@ -35,7 +35,5 @@ public class CountContacts {
 		System.out.println("\nMean PRO-LYS CA-CA distance: "+mean);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
-
-
 	}
 }

@@ -1,7 +1,7 @@
 package demo;
 
-import org.rcsb.mmtf.spark.SparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 /**
  * A very simple example reading the PDB and finding the number
