@@ -8,20 +8,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.mllib.clustering.PowerIterationClustering;
-import org.apache.spark.mllib.clustering.PowerIterationClusteringModel;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.align.ce.CeCPMain;
 import org.biojava.nbio.structure.align.fatcat.FatCatRigid;
 import org.biojava.nbio.structure.align.model.AFPChain;
 import org.biojava.spark.function.AlignmentTools;
-import org.biojava.spark.graph.ShowGraph;
-import org.biojava.spark.graph.WeightedGraph;
 import org.biojava.spark.utils.BiojavaSparkUtils;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultWeightedEdge;
+import org.rcsb.mmtf.api.StructureDataInterface;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 import org.rcsb.mmtf.spark.utils.SparkUtils;
-import org.rcsb.mmtf.spark.utils.TwoWayHashmap;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -51,20 +46,27 @@ public class ChainAligner {
 		Namespace ns = parseArgs(args);
 		// Get the actual arguments
 		String alignMethod = ns.getString("align");
-		String clusterMethod = ns.getString("cluster");
-		String scoreMethod = ns.getString("score");
 		String filePath = ns.getString("hadoop");
-		int numClusters = ns.getInt("numclusts");
 		int minLength = ns.getInt("minlength");
 		double sample = ns.getDouble("sample");
-		double theshold = ns.getDouble("threshold");
+		boolean useFiles = ns.getBoolean("files");
+		
 		// Get the list of PDB ids
 		List<String> pdbIdList = ns.<String> getList("pdbId");
 
 		// Get the chains that correpspond to that
 		JavaPairRDD<String, Atom[]>  chainRDD;
 		if(pdbIdList.size()>0){
-			chainRDD = BiojavaSparkUtils.getChainRDD(pdbIdList, minLength);
+			if(useFiles==true){
+				StructureDataRDD structureDataRDD = new StructureDataRDD(
+						BiojavaSparkUtils.getFromList(convertToFiles(pdbIdList))
+						.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1, BiojavaSparkUtils.convertToStructDataInt(t._2))));
+				chainRDD = BiojavaSparkUtils.getChainRDD(structureDataRDD, minLength);
+
+			}
+			else{
+				chainRDD = BiojavaSparkUtils.getChainRDD(pdbIdList, minLength);
+			}
 		}
 		else if(!filePath.equals(defaultPath)){
 			chainRDD = BiojavaSparkUtils.getChainRDD(filePath, minLength, sample);
@@ -74,15 +76,10 @@ public class ChainAligner {
 			return;
 		}
 
-		// Produce a two way hash map
-		TwoWayHashmap<String, Integer> nameIndexBiMap = SparkUtils.getKeysToIndices(chainRDD);
 		System.out.println("Analysisng " + chainRDD.count() + " chains");
-		// Now apply a function to those chains 
-		JavaPairRDD<Tuple2<String,Atom[]>,Tuple2<String, Atom[]>> comparisons = SparkUtils.getHalfCartesian(chainRDD);
-		// Now perform the alignment itself
+		JavaPairRDD<Tuple2<String,Atom[]>,Tuple2<String, Atom[]>> comparisons = SparkUtils.getHalfCartesian(chainRDD, chainRDD.getNumPartitions());
 		JavaRDD<Tuple3<String, String,  AFPChain>> similarities = comparisons.map(t -> new Tuple3<String, String, AFPChain>(t._1._1, t._2._1, 
 				AlignmentTools.getBiojavaAlignment(t._1._2, t._2._2, alignMethod)));
-		// Now get the different similarities -> do this in one map
 		JavaRDD<Tuple6<String, String, Double, Double, Double, Double>> allScores = similarities.map(t -> new Tuple6<String, String, Double, Double, Double, Double>(
 				t._1(), t._2(), t._3().getTMScore(), t._3().getTotalRmsdOpt(),  (double) t._3().getTotalLenOpt(),  t._3().getAlignScore())).cache();
 		if(alignMethod.equals("DUMMY")){
@@ -90,50 +87,21 @@ public class ChainAligner {
 			System.out.println("Average dist: "+doubleDist.mean());
 		}
 		else{
-			// Now write the data to a file
 			writeData(allScores);
-			// Now define the score
-			clusterData(allScores, clusterMethod, scoreMethod, numClusters, nameIndexBiMap);
-			// Now produce a graph
-			showGraph(allScores, nameIndexBiMap, theshold, scoreMethod);
 		}
 	}
 
 	/**
-	 * Cluster the data using the method and the score desired.
-	 * @param allScores all of the scores generated
-	 * @param clusterMethod the method to use for clustering
-	 * @param scoreMethod the method to use for  scoring
-	 * @param numClusters the number of clusters
-	 * @param twoWayHashMap the two way hash map to map strings to indices
+	 * Convert a list of {@link String}s to an array of {@link File}s
+	 * @param pdbIdList the input list of {@link String}s
+	 * @return the array of {@link File}s
 	 */
-	private static void clusterData(JavaRDD<Tuple6<String, String, Double, Double, Double, Double>> allScores,
-			String clusterMethod, String scoreMethod, int numClusters, TwoWayHashmap<String, Integer> twoWayHashMap) {
-		JavaRDD<Tuple3<String,String, Double>> clusterScore;
-		if(scoreMethod.equals("TM")){
-			clusterScore = allScores.map(t -> new Tuple3<String, String, Double>(t._1(), t._2(), 1-t._3()));
+	private static File[] convertToFiles(List<String> pdbIdList) {
+		File[] outList = new File[pdbIdList.size()];
+		for (int i=0; i<pdbIdList.size(); i++) {
+			outList[i] = new File(pdbIdList.get(i));
 		}
-		else if(scoreMethod.equals("RMSD")){
-			clusterScore = allScores.map(t -> new Tuple3<String, String, Double>(t._1(), t._2(), t._4()));
-		}
-		else{
-			System.out.println("Score not available - "+scoreMethod);
-			return;
-		}
-
-
-		// Perform the clustering
-		if(clusterMethod.equals("PIC")) {
-			PowerIterationClustering pic = new PowerIterationClustering()
-					.setK(numClusters)
-					.setMaxIterations(100);
-			// Now produce the model
-			PowerIterationClusteringModel model = pic.run(clusterScore.map(t -> new Tuple3<Long, Long, Double>((long) twoWayHashMap.getForward(t._1()),(long) twoWayHashMap.getForward(t._2()),t._3())));
-			for (PowerIterationClustering.Assignment a: model.assignments().toJavaRDD().collect()) {
-				System.out.println(twoWayHashMap.getBackward((int) a.id()) + " -> " + a.cluster());
-			}
-		}
-
+		return outList;
 	}
 
 	/**
@@ -165,6 +133,8 @@ public class ChainAligner {
 		parser.addArgument("-s", "--score")
 		.choices("TM","RMSD").setDefault("TM")
 		.help("Specify scoring method");
+		parser.addArgument("-u", "--files").type(Boolean.class)
+		.setDefault(false);
 		parser.addArgument("-k", "--numclusts")
 		.help("The number of clusters").setDefault(2);
 		parser.addArgument("-c", "--cluster")
@@ -190,45 +160,6 @@ public class ChainAligner {
 		return ns;
 	}
 
-	/**
-	 * Write out a graph given an input of similarities.
-	 * @param allScores the input simlarities as an RDD
-	 * @param scoreMethod 
-	 * @param string the name of this similarity type
-	 */
-	private static void showGraph(JavaRDD<Tuple6<String, String, Double,Double, Double, Double>> allScores, TwoWayHashmap<String, Integer> biMap, double threshold, String scoreMethod) {
-		JavaRDD<Tuple3<String,String, Double>> clusterScore;
-		if(scoreMethod=="TM"){
-			clusterScore = allScores.map(t -> new Tuple3<String, String, Double>(t._1(), t._2(), t._3()));
-		}
-		else if(scoreMethod=="RMSD"){
-			clusterScore = allScores.map(t -> new Tuple3<String, String, Double>(t._1(), t._2(), 1.0 / t._4()));
-		}
-		else{
-			System.out.println("Score not available - "+scoreMethod);
-			return;
-		}
 
-		List<Tuple3<Integer, Integer, Double>> scoreList = clusterScore
-				.map(t -> new Tuple3<Integer, Integer, Double>(biMap.getForward(t._1()),biMap.getForward(t._2()),t._3()))
-				.collect();
-		Graph<Integer, DefaultWeightedEdge> graph = WeightedGraph.build(scoreList);
-		ShowGraph showGraph = new ShowGraph(graph, getNameList(biMap, scoreList.size()));
-		showGraph.showGraph(threshold, false);
-	}
-
-	/**
-	 * Get a list of strings in the order of their indices in the {@link TwoWayHashmap}.
-	 * @param biMap the input {@link TwoWayHashmap}
-	 * @param size the input size of the map
-	 * @return the list of strings in the order they appear
-	 */
-	private static String[] getNameList(TwoWayHashmap<String, Integer> biMap, int size) {
-		String[] outList = new String[size];
-		for (int i=0; i<size; i++){
-			outList[i] = biMap.getBackward(i);
-		}
-		return outList;
-	}
 
 }

@@ -1,8 +1,10 @@
 package org.biojava.spark.utils;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,13 +35,17 @@ import org.biojava.nbio.structure.Element;
 import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.Structure;
+import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
 import org.biojava.nbio.structure.contact.Grid;
+import org.biojava.nbio.structure.io.mmcif.SimpleMMcifConsumer;
+import org.biojava.nbio.structure.io.mmcif.SimpleMMcifParser;
 import org.biojava.nbio.structure.io.mmcif.model.ChemComp;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureReader;
+import org.biojava.nbio.structure.io.mmtf.MmtfStructureWriter;
 import org.biojava.spark.data.AtomContactRDD;
-import org.biojava.spark.data.AtomDataRDD;
+import org.biojava.spark.data.AtomData;
 import org.biojava.spark.mappers.CalculateContacts;
 import org.biojava.spark.mappers.CalculateFrequency;
 import org.rcsb.mmtf.api.StructureDataInterface;
@@ -47,6 +53,7 @@ import org.rcsb.mmtf.dataholders.MmtfStructure;
 import org.rcsb.mmtf.decoder.DefaultDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
+import org.rcsb.mmtf.encoder.AdapterToStructureData;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 import org.rcsb.mmtf.spark.data.Segment;
@@ -63,8 +70,7 @@ import scala.Tuple2;
  */
 public class BiojavaSparkUtils {
 
-	
-	
+
 	/** The name of the C-Alpha atoms in a group.*/
 	private static final String CA_NAME = "CA";
 	
@@ -137,16 +143,16 @@ public class BiojavaSparkUtils {
 	 * @param selectObjectOne the type of atom to find
 	 * @return the {@link JavaRDD} of {@link Atom} objects
 	 */
-	public static AtomDataRDD findAtoms(StructureDataRDD structureDataRDD, AtomSelectObject selectObjectOne) {
-		return new AtomDataRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(selectObjectOne)));
+	public static AtomData findAtoms(StructureDataRDD structureDataRDD, AtomSelectObject selectObjectOne) {
+		return new AtomData(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(selectObjectOne)));
 	}
 
 	/**
 	 * Find all the atoms in the RDD.
 	 * @return the {@link JavaRDD} of {@link Atom} objects
 	 */
-	public static AtomDataRDD findAtoms(StructureDataRDD structureDataRDD) {
-		return new AtomDataRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(new AtomSelectObject())));
+	public static AtomData findAtoms(StructureDataRDD structureDataRDD) {
+		return new AtomData(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(new AtomSelectObject())));
 	}
 	
 	/**
@@ -301,7 +307,7 @@ public class BiojavaSparkUtils {
 
 			// Set the type
 			ChemComp cc = new ChemComp();
-			cc.setType(SparkUtils.getType(structure, chainInd));
+			cc.setType(getTypeFromChainId(structure, chainInd));
 			int numGroups = structure.getGroupsPerChain()[chainInd];
 			Chain chain = new ChainImpl();
 			chain.setId(structure.getChainIds()[chainInd]);
@@ -359,6 +365,73 @@ public class BiojavaSparkUtils {
 			return true;
 		}));
 	}
+	
+	/**
+	 * Function (for benchmarking) to get a {@link StructureDataRDD} from a Hadoop file of mmCIF data.
+	 * @param filePath the path of the Hadoop sequnece file
+	 * @return the {@link StructureDataRDD} generated
+	 */
+	public static StructureDataRDD getStructureRDDFromMmcif(String filePath){
+		return new StructureDataRDD(SparkUtils.getSparkContext()
+		.sequenceFile(filePath, Text.class, BytesWritable.class, 8)
+		.mapToPair(t -> new Tuple2<String, byte[]>(t._1.toString(), ReaderUtils.deflateGzip(t._2.getBytes())))
+		.mapToPair(t -> new Tuple2<String, Structure>(t._1, getStructureFromMmmCifText(t._2)))
+		.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1, convertToStructDataInt(t._2))));
+	}
 
+	/**
+	 * Get a {@link StructureDataInterface} from a Biojava {@link Structure}.
+	 * @param structure the input structure to covnert
+	 * @return the {@link StructureDataInterface} of the Biojava {@link Structure}
+	 */
+	public static StructureDataInterface convertToStructDataInt(Structure structure) {
+		AdapterToStructureData writerToEncoder = new AdapterToStructureData();
+		new MmtfStructureWriter(structure, writerToEncoder);
+		return writerToEncoder;
+	}
+
+	/**
+	 * Function to parse a structure from mmCIF text as string.
+	 * @param inputText the input text to read
+	 * @return the Biojava {@link Structure} from the text
+	 * @throws IOException 
+	 */
+	private static Structure getStructureFromMmmCifText(byte[] inputText) throws IOException {
+		SimpleMMcifConsumer simpleMMcifConsumer = new SimpleMMcifConsumer();
+		SimpleMMcifParser simpleMMcifParser =  new SimpleMMcifParser();
+		simpleMMcifParser.addMMcifConsumer(simpleMMcifConsumer);
+		simpleMMcifParser.parse(new ByteArrayInputStream(inputText));
+		return simpleMMcifConsumer.getStructure();
+	}
+	
+	/**
+	 * Generate a {@link JavaPairRDD} of String {@link Structure} from a list of PDB files.
+	 * @param pdbIdList the input list of PDB files
+	 * @return the {@link JavaPairRDD} of {@link String} {@link Structure}
+	 */
+	public static JavaPairRDD<String, Structure> getFromList(File[] pdbIdList) {
+		return SparkUtils.getSparkContext()
+		.parallelize(Arrays.asList(pdbIdList))	
+		.mapToPair(file -> new Tuple2<String, Structure>(file.getName(), StructureIO.getStructure(file.getAbsolutePath())));
+	}
+	
+	/**
+	 * Get the type of a given chain index - SHOULD BE MOVED INTO ENCODER UTILS
+	 * @param structureDataInterface the input {@link StructureDataInterface}
+	 * @param chainInd the index of the relevant chain
+	 * @return the {@link String} describing the chain 
+	 */
+	public static String getTypeFromChainId(StructureDataInterface structureDataInterface, int chainInd) {
+		for(int i=0; i<structureDataInterface.getNumEntities(); i++){
+			for(int chainIndex : structureDataInterface.getEntityChainIndexList(i)){
+				if(chainInd==chainIndex){
+					return structureDataInterface.getEntityType(i);
+				}
+			}
+		}
+		System.err.println("ERROR FINDING ENTITY FOR CHAIN: "+chainInd);
+		return "NULL";
+	}
+	
 
 }
