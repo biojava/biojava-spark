@@ -24,6 +24,7 @@
 		<scala.version>2.11</scala.version>
 		<slf4j.version>1.7.20</slf4j.version>
 		<log4j.version>2.5</log4j.version>
+		<mmtf.version>0.2.0</mmtf.version>
 	</properties>
 
 	<dependencies>
@@ -109,22 +110,17 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-spark</artifactId>
-			<version>0.0.2-SNAPSHOT</version>
+			<version>0.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
-			<artifactId>mmtf-decoder</artifactId>
-			<version>0.1.0</version>
+			<artifactId>mmtf-codec</artifactId>
+			<version>${mmtf.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-api</artifactId>
-			<version>0.1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.rcsb</groupId>
-			<artifactId>mmtf-encoder</artifactId>
-			<version>0.1.0</version>
+            <version>${mmtf.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jgrapht</groupId>

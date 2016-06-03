@@ -50,7 +50,7 @@ import org.biojava.spark.mappers.CalculateContacts;
 import org.biojava.spark.mappers.CalculateFrequency;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.dataholders.MmtfStructure;
-import org.rcsb.mmtf.decoder.DefaultDecoder;
+import org.rcsb.mmtf.decoder.GenericDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.encoder.AdapterToStructureData;
@@ -169,7 +169,7 @@ public class BiojavaSparkUtils {
 				// Roughly a minute 
 				.mapToPair(t -> new Tuple2<String, MmtfStructure>(t._1, new MessagePackSerialization().deserialize(new ByteArrayInputStream(t._2))))
 				// Roughly a minute
-				.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1,  new DefaultDecoder(t._2)))
+				.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1,  new GenericDecoder(t._2)))
 				// Now convert to Biojava strcutre
 				.mapToPair(t -> {
 					MmtfStructureReader mmtfStructureReader = new MmtfStructureReader();
