@@ -36,7 +36,7 @@ tar -xvf reduced.tar
 ### Do some simple quality filtering
 
 ```
-	new StructureDataRDD("/path/to/file")
+	StructureDataRDD structureData = new StructureDataRDD("/path/to/file")
 				.filterResolution(maxResolution)
 				.filterRfree(maxRfree)
 				.size();
@@ -44,13 +44,13 @@ tar -xvf reduced.tar
 
 ### Summarsing the elements in the PDB
 ```
-	Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD("/path/to/file")).countByElement();
+	Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(structureData).countByElement();
 ```
 
 ### Finding inter-atomic contacts from the PDB
 
 ```
-		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD("/path/to/file"),
+		Double mean = BiojavaSparkUtils.findContacts(structureData,
 				new AtomSelectObject()
 						.groupNameList(new String[] {"PRO","LYS"})
 						.elementNameList(new String[] {"C"})
