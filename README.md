@@ -36,10 +36,11 @@ tar -xvf reduced.tar
 ### Do some simple quality filtering
 
 ```
+	float maxResolution = 3.0;
+	float maxRfree = 0.3;
 	StructureDataRDD structureData = new StructureDataRDD("/path/to/file")
 				.filterResolution(maxResolution)
-				.filterRfree(maxRfree)
-				.size();
+				.filterRfree(maxRfree);
 ```
 
 ### Summarsing the elements in the PDB
