@@ -44,7 +44,7 @@ import org.rcsb.mmtf.decoder.DefaultDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 import org.rcsb.mmtf.spark.data.SegmentDataRDD;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
@@ -145,6 +145,7 @@ public class BiojavaSparkUtils {
 		List<String> atomNames = atomSelectObject.getAtomNameList();
 		List<String> elementNames = atomSelectObject.getElementNameList();
 		List<String> groupNames = atomSelectObject.getGroupNameList();
+		List<String> groupAtomNames = atomSelectObject.getGroupAtomNameList();
 		boolean charged = atomSelectObject.isCharged();
 		String groupType = atomSelectObject.getGroupType();
 
@@ -162,6 +163,9 @@ public class BiojavaSparkUtils {
 		}
 		if(groupType!=null){
 			atomStream = atomStream.filter(atom -> atom.getGroup().getChemComp().getType().equals(groupType));
+		}
+		if(groupAtomNames!=null && groupAtomNames.size()!=0){
+			atomStream = atomStream.filter(atom -> groupAtomNames.contains(getGroupAtomName(atom)));
 		}
 		return atomStream.collect(Collectors.toList());
 	}
@@ -269,14 +273,15 @@ public class BiojavaSparkUtils {
 			return true;
 		}));
 	}
+
+	/**
+	 * Get a conjoined group atom name from an atom.
+	 * @param atom the input atom
+	 * @return the String describing the conjoined group atom name.
+	 */
+	public static String getGroupAtomName(Atom atom) {
+		return atom.getGroup().getPDBName()+"_"+atom.getName();
+	}
 	
-//	/**
-//	 * Get the data as a {@link GroupDataRDD} that can be used for finding 
-//	 * features on a group level.
-//	 * @return the group data as a {@link GroupDataRDD}
-//	 */
-//	public GroupDataRDD getGroupData() {
-//		return new GroupDataRDD(javaPairRdd.flatMapToPair(new CollectGroups()));
-//	}
 
 }

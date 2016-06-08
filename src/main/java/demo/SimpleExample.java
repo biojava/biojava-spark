@@ -1,6 +1,6 @@
 package demo;
 
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**

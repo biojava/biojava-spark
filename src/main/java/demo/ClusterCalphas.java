@@ -8,9 +8,9 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.mllib.clustering.PowerIterationClustering;
 import org.apache.spark.mllib.clustering.PowerIterationClusteringModel;
-import org.rcsb.mmtf.spark.SparkUtils;
 import org.rcsb.mmtf.spark.data.Segment;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 import scala.Tuple2;
 import scala.Tuple3;

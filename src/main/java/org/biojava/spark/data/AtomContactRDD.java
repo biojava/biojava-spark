@@ -2,13 +2,22 @@ package org.biojava.spark.data;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.spark.api.java.JavaDoubleRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
+import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.contact.AtomContact;
+import org.rcsb.mmtf.spark.data.Contact;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
+
+import scala.Tuple2;
 
 
 /**
@@ -62,7 +71,34 @@ public class AtomContactRDD implements Serializable {
 				.filter(t -> t.getDistance()<cutoff));
 	}
 	
+	/**
+	 * Get the contacts as  {@link Contact} {@link Dataset} to be queried using SQL.
+	 * @return the {@link Contact}s as a {@link Dataset}
+	 */
+	public Dataset<Contact> getDataset() {
+		JavaRDD<Contact> contactRdd = atomContactRdd.map(t -> generateContact(t));
+		return SparkUtils.convertToDataset(contactRdd, Contact.class);
+	}
 	
+
+	public DataFrame getDataframe() {
+		JavaRDD<Contact> contactRdd = atomContactRdd.map(t -> generateContact(t));
+		return SparkUtils.convertToDataframe(contactRdd, Contact.class);
+	}
+	
+	
+	private Contact generateContact(AtomContact atomContact) {
+		Contact contact = new Contact();
+		contact.setChainsNames(getCanonChains(atomContact));
+		contact.setDistance((float) atomContact.getDistance());
+		contact.setElementsNames(getCanonElementNames(atomContact));
+		contact.setAtomsNames(getCanonAtomNames(atomContact));
+		contact.setResiduesNumbers(getCanonResidueNumbers(atomContact));
+		contact.setGroupsNames(getCanonGroups(atomContact));
+		return contact;
+	}
+
+
 	/**
 	 * Get the distance distributions for all of the atom types.
 	 * @param atomName the original atom name
@@ -178,6 +214,17 @@ public class AtomContactRDD implements Serializable {
 		return getCanonStrings(atomContact.getPair().getFirst().getElement().toString(), 
 				atomContact.getPair().getSecond().getElement().toString());
 	}
+		
+
+	private String getCanonChains(AtomContact atomContact) {
+		return getCanonStrings(atomContact.getPair().getFirst().getGroup().getChainId(), 
+				atomContact.getPair().getSecond().getGroup().getChainId());
+	}
+
+	private String getCanonResidueNumbers(AtomContact atomContact) {
+		return getCanonStrings(atomContact.getPair().getFirst().getGroup().getResidueNumber().getSeqNum().toString(), 
+				atomContact.getPair().getSecond().getGroup().getResidueNumber().getSeqNum().toString());
+	}
 	
 	
 	/**
@@ -193,5 +240,76 @@ public class AtomContactRDD implements Serializable {
 		return groupList.stream().sorted().collect(Collectors.joining(JOINER));
 	}
 
+	public AtomContactRDD filterElementGroupContacts(String string, String string2) {
+		return new AtomContactRDD(getAtomContactRDD().filter(t -> findGroupElementContacts(t, string, string2)));
+		
+	}
+	
+	public AtomContactRDD filterElementElementContacts(String string, String string2) {
+		return new AtomContactRDD(getAtomContactRDD().filter(t -> findElementElementContacts(t, string, string2)));
+	}
+
+	private boolean findElementElementContacts(AtomContact t, String atomName1, String atomName2) {
+		if(t.getPair().getFirst().getElement().toString().equals(atomName1)){
+			if(t.getPair().getSecond().getElement().toString().equals(atomName2)){
+				return true;
+			}
+		}
+		else if(t.getPair().getFirst().getElement().toString().equals(atomName2)){
+			if(t.getPair().getSecond().getElement().toString().equals(atomName1)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean findGroupElementContacts(AtomContact t, String groupName, String atomName) {
+		if(t.getPair().getFirst().getGroup().getPDBName().equals(groupName)){
+			if(t.getPair().getSecond().getElement().toString().equals(atomName)){
+				return true;
+			}
+		}
+		else if(t.getPair().getSecond().getGroup().getPDBName().equals(groupName)){
+			if(t.getPair().getFirst().getElement().toString().equals(atomName)){
+				return true;
+			}
+		}
+		return false;
+	}
+
+
+	/**
+	 * Get the associated PDB ids as a list of Strings
+	 * @return a list of PDB ids for related entries
+	 */
+	public List<String> getPdbIds() {
+		return getPairs().map(t -> t._1.getGroup().getChain().getStructure().getPDBCode()).collect();
+	}
+	
+	
+	/**
+	 * Get the associate group ids
+	 * @return the list of assicated group ids
+	 */
+	public List<String> getGroupIds()  {
+		return getPairs().map(t -> t._1.getGroup().getPDBName()).collect();
+	}
+
+	/**
+	 * Get the assoicated pairs of atoms found in this
+	 * @return
+	 */
+	public JavaPairRDD<Atom, Atom> getPairs(){
+		return atomContactRdd.mapToPair(t -> new Tuple2<Atom,Atom>(t.getPair().getFirst(), t.getPair().getSecond()));
+	}
+	
+	
+	/**
+	 * Get the contacts as an {@link AtomDataRDD}
+	 * @return an {@link AtomDataRDD} of all the atoms found in these contacts
+	 */
+	public AtomDataRDD getAtoms() {
+		return new AtomDataRDD(getPairs().flatMap(t -> Arrays.asList(new Atom[]{t._1,t._2})));
+	}
 
 }

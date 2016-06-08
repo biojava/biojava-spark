@@ -73,7 +73,7 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 					Atom atomOne = atomContact.getPair().getFirst();
 					Atom atomTwo = atomContact.getPair().getSecond();
 					// They shouldn't be part of the same group
-					if(!atomOne.getGroup().getResidueNumber().getSeqNum().equals(atomTwo.getGroup().getResidueNumber().getSeqNum())){
+					if(!atomOne.getGroup().getResidueNumber().equals(atomTwo.getGroup().getResidueNumber())){
 						// This is how we write out each line in the file
 						outList.add(atomContact);
 					}
