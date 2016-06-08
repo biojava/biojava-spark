@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Dataset;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.contact.AtomContact;
@@ -78,12 +77,6 @@ public class AtomContactRDD implements Serializable {
 	public Dataset<Contact> getDataset() {
 		JavaRDD<Contact> contactRdd = atomContactRdd.map(t -> generateContact(t));
 		return SparkUtils.convertToDataset(contactRdd, Contact.class);
-	}
-	
-
-	public DataFrame getDataframe() {
-		JavaRDD<Contact> contactRdd = atomContactRdd.map(t -> generateContact(t));
-		return SparkUtils.convertToDataframe(contactRdd, Contact.class);
 	}
 	
 	
@@ -308,8 +301,8 @@ public class AtomContactRDD implements Serializable {
 	 * Get the contacts as an {@link AtomDataRDD}
 	 * @return an {@link AtomDataRDD} of all the atoms found in these contacts
 	 */
-	public AtomDataRDD getAtoms() {
-		return new AtomDataRDD(getPairs().flatMap(t -> Arrays.asList(new Atom[]{t._1,t._2})));
+	public AtomData getAtoms() {
+		return new AtomData(getPairs().flatMap(t -> Arrays.asList(new Atom[]{t._1,t._2})));
 	}
 
 }

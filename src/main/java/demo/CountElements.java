@@ -1,10 +1,12 @@
 package demo;
 
 import org.apache.spark.api.java.JavaRDD;
-import org.biojava.spark.BiojavaSparkUtils;
-import org.biojava.spark.data.AtomDataRDD;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 import org.rcsb.mmtf.spark.data.Point;
+import java.util.Map;
+
+import org.biojava.spark.data.AtomData;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
@@ -23,7 +25,7 @@ public class CountElements {
 
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
-		AtomDataRDD tylenols = BiojavaSparkUtils.findAtoms(new StructureDataRDD(), new AtomSelectObject()
+		AtomData tylenols = BiojavaSparkUtils.findAtoms(new StructureDataRDD(), new AtomSelectObject()
 				.groupNameList(new String[]{"TYL"}));
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 
