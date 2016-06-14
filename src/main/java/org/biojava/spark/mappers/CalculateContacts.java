@@ -28,8 +28,12 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 	private double cutoff;
 	private AtomSelectObject selectObjectOne;
 	private AtomSelectObject selectObjectTwo;
+	private boolean fast = true;
 
 	/**
+	 * 
+	 * @param selectObjectOne
+	 * @param selectObjectTwo
 	 * @param cutoff
 	 */
 	public CalculateContacts(AtomSelectObject selectObjectOne, 
@@ -37,6 +41,21 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 		this.cutoff = cutoff;
 		this.selectObjectOne = selectObjectOne;
 		this.selectObjectTwo = selectObjectTwo;
+	}
+
+	/**
+	 * 
+	 * @param selectObjectOne
+	 * @param selectObjectTwo
+	 * @param cutoff
+	 * @param fast
+	 */
+	public CalculateContacts(AtomSelectObject selectObjectOne, 
+			AtomSelectObject selectObjectTwo, double cutoff, boolean fast) {
+		this.cutoff = cutoff;
+		this.selectObjectOne = selectObjectOne;
+		this.selectObjectTwo = selectObjectTwo;
+		this.fast = fast;
 	}
 
 
@@ -66,7 +85,13 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 		if(atomListTwo.size()>0){
 			List<Atom> atomListOne = BiojavaSparkUtils.getAtoms(structure, selectObjectTwo);
 			if(atomListOne.size()>0){
-				AtomContactSet atomContactSet = BiojavaSparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
+				AtomContactSet atomContactSet;
+				if(fast==true){
+					atomContactSet = BiojavaSparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
+				}
+				else{
+					atomContactSet = BiojavaSparkUtils.getAtomContactsSlow(atomListOne, atomListTwo, cutoff);
+				}
 				for(AtomContact atomContact : atomContactSet){
 					// Maybe add a filter here to ensure they're not 
 					// in the same group

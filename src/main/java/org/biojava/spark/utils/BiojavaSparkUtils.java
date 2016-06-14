@@ -29,6 +29,7 @@ import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import org.biojava.nbio.structure.AminoAcidImpl;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.AtomImpl;
+import org.biojava.nbio.structure.Calc;
 import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.ChainImpl;
 import org.biojava.nbio.structure.Element;
@@ -39,6 +40,7 @@ import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
 import org.biojava.nbio.structure.contact.Grid;
+import org.biojava.nbio.structure.contact.Pair;
 import org.biojava.nbio.structure.io.mmcif.SimpleMMcifConsumer;
 import org.biojava.nbio.structure.io.mmcif.SimpleMMcifParser;
 import org.biojava.nbio.structure.io.mmcif.model.ChemComp;
@@ -73,11 +75,11 @@ public class BiojavaSparkUtils {
 
 	/** The name of the C-Alpha atoms in a group.*/
 	private static final String CA_NAME = "CA";
-	
+
 	/** The default chain name.*/
 	private static final String CHAIN_NAME = "A";
-	
-	
+
+
 	/**
 	 * Gets the C-alpha {@link Atom} for the given input {@link Segment}.
 	 * @param segment the input {@link Segment} object
@@ -106,7 +108,7 @@ public class BiojavaSparkUtils {
 		}
 		return atoms;
 	}
-	
+
 	/**
 	 * Find the contacts for each structure in the PDB.
 	 * @param selectObjectOne the first type of atoms
@@ -125,7 +127,7 @@ public class BiojavaSparkUtils {
 	 * @return the {@link JavaPairRDD} of {@link AtomContact} objects
 	 */
 	public static AtomContactRDD findContacts(StructureDataRDD structureDataRDD, AtomSelectObject selectObjectOne, double cutoff) {
-		return new AtomContactRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateContacts(selectObjectOne, selectObjectOne, cutoff)));
+		return new AtomContactRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateContacts(selectObjectOne, selectObjectOne, cutoff, false)));
 	}
 
 	/**
@@ -154,7 +156,7 @@ public class BiojavaSparkUtils {
 	public static AtomData findAtoms(StructureDataRDD structureDataRDD) {
 		return new AtomData(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(new AtomSelectObject())));
 	}
-	
+
 	/**
 	 * Get an {@link JavaPairRDD} of {@link String} {@link Structure} from a file path.
 	 * @param filePath the input path to the hadoop sequence file
@@ -177,7 +179,7 @@ public class BiojavaSparkUtils {
 					return new Tuple2<String, Structure>(t._1, mmtfStructureReader.getStructure());
 				});
 	}
-	
+
 	/**
 	 * Get all the atoms of a given name or in a given group in the structure using a {@link StructureDataInterface}.
 	 * @param structure the input {@link StructureDataInterface}
@@ -244,7 +246,34 @@ public class BiojavaSparkUtils {
 		return grid.getContacts();
 	}
 
-	
+
+	/**
+	 * Get the contacts between two lists of atoms using iteration and not grids
+	 * @param atomListOne the first list of {@link Atom}s
+	 * @param atomListTwo the second list of {@link Atom}s
+	 * @param cutoff the cutoff to define a contact
+	 * @return the {@link AtomContactSet} of the contacts
+	 */
+	public static AtomContactSet getAtomContactsSlow(List<Atom> atomListOne, List<Atom> atomListTwo, double cutoff) {
+		AtomContactSet atomContactSet = new AtomContactSet(cutoff);
+		for(int i=0; i<atomListOne.size();i++) {
+			for(int j=i; j<atomListTwo.size();j++){
+				Atom atomOne = atomListOne.get(i);
+				Atom atomTwo = atomListTwo.get(j);
+				if(atomOne.equals(atomTwo)){
+					continue;
+				}
+				double distance = Calc.getDistance(atomOne, atomTwo);
+				if(distance<cutoff){
+					AtomContact atomContact = new AtomContact(new Pair<Atom>(atomOne, atomTwo), distance);
+					atomContactSet.add(atomContact);
+				}
+			}
+		}
+		return atomContactSet;
+	}
+
+
 	/**
 	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
 	 * @param pdbIdList the input list of PDB ids
@@ -267,7 +296,7 @@ public class BiojavaSparkUtils {
 	public static JavaPairRDD<String, Atom[]> getChainRDD(String filePath, int minLength, double sample) throws IOException {
 		return getChainRDD(new StructureDataRDD(filePath).sample(sample), minLength);
 	}
-	
+
 	/**
 	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
 	 * @param pdbIdList the input list of PDB ids
@@ -277,7 +306,7 @@ public class BiojavaSparkUtils {
 	public static JavaPairRDD<String, Atom[]> getChainRDD(List<String> pdbIdList) throws IOException {
 		return getChainRDD(pdbIdList, 60);
 	}
-	
+
 	/**
 	 * Get the {@link JavaPairRDD} of Key: PDBID.CHAINID  and Value: {@link Atom} array of the C-alpha coordinates.
 	 * @param structureDataRDD the input {@link StructureDataRDD}
@@ -338,7 +367,7 @@ public class BiojavaSparkUtils {
 		}
 		return atomList;
 	}
-	
+
 	/**
 	 * Filter the {@link SegmentDataRDD} based on minimum sequence similarity to a reference sequence.
 	 * @param inputSequence the reference sequence to compare
@@ -365,7 +394,7 @@ public class BiojavaSparkUtils {
 			return true;
 		}));
 	}
-	
+
 	/**
 	 * Function (for benchmarking) to get a {@link StructureDataRDD} from a Hadoop file of mmCIF data.
 	 * @param filePath the path of the Hadoop sequnece file
@@ -373,10 +402,10 @@ public class BiojavaSparkUtils {
 	 */
 	public static StructureDataRDD getStructureRDDFromMmcif(String filePath){
 		return new StructureDataRDD(SparkUtils.getSparkContext()
-		.sequenceFile(filePath, Text.class, BytesWritable.class, 8)
-		.mapToPair(t -> new Tuple2<String, byte[]>(t._1.toString(), ReaderUtils.deflateGzip(t._2.getBytes())))
-		.mapToPair(t -> new Tuple2<String, Structure>(t._1, getStructureFromMmmCifText(t._2)))
-		.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1, convertToStructDataInt(t._2))));
+				.sequenceFile(filePath, Text.class, BytesWritable.class, 8)
+				.mapToPair(t -> new Tuple2<String, byte[]>(t._1.toString(), ReaderUtils.deflateGzip(t._2.getBytes())))
+				.mapToPair(t -> new Tuple2<String, Structure>(t._1, getStructureFromMmmCifText(t._2)))
+				.mapToPair(t -> new Tuple2<String, StructureDataInterface>(t._1, convertToStructDataInt(t._2))));
 	}
 
 	/**
@@ -403,7 +432,7 @@ public class BiojavaSparkUtils {
 		simpleMMcifParser.parse(new ByteArrayInputStream(inputText));
 		return simpleMMcifConsumer.getStructure();
 	}
-	
+
 	/**
 	 * Generate a {@link JavaPairRDD} of String {@link Structure} from a list of PDB files.
 	 * @param pdbIdList the input list of PDB files
@@ -411,10 +440,10 @@ public class BiojavaSparkUtils {
 	 */
 	public static JavaPairRDD<String, Structure> getFromList(File[] pdbIdList) {
 		return SparkUtils.getSparkContext()
-		.parallelize(Arrays.asList(pdbIdList))	
-		.mapToPair(file -> new Tuple2<String, Structure>(file.getName(), StructureIO.getStructure(file.getAbsolutePath())));
+				.parallelize(Arrays.asList(pdbIdList))	
+				.mapToPair(file -> new Tuple2<String, Structure>(file.getName(), StructureIO.getStructure(file.getAbsolutePath())));
 	}
-	
+
 	/**
 	 * Get the type of a given chain index - SHOULD BE MOVED INTO ENCODER UTILS
 	 * @param structureDataInterface the input {@link StructureDataInterface}
@@ -432,6 +461,6 @@ public class BiojavaSparkUtils {
 		System.err.println("ERROR FINDING ENTITY FOR CHAIN: "+chainInd);
 		return "NULL";
 	}
-	
+
 
 }
