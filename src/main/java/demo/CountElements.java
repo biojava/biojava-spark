@@ -22,12 +22,10 @@ public class CountElements {
 
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
-		
-		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD()).countByElement();
+		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD("/Users/anthony/full")).countByElement();
 		System.out.println("\nElement map"+elementCountMap);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
-
 	}
 
 }

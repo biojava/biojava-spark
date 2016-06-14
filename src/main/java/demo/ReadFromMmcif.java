@@ -1,6 +1,5 @@
 package demo;
 
-import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
@@ -16,8 +15,7 @@ public class ReadFromMmcif {
 	 */
 	public static void main(String[] args){
 		long start = System.currentTimeMillis();
-		StructureDataRDD  structureDataRDD = BiojavaSparkUtils.getStructureRDDFromMmcif("/Users/anthony/mmtf-update/mmCIF_TOTAL");
-		structureDataRDD.filterResolution(3.0);
+		StructureDataRDD  structureDataRDD = new StructureDataRDD("/Users/anthony/full");//BiojavaSparkUtils.getStructureRDDFromMmcif("/Users/anthony/mmtf-update/mmCIF_TOTAL");
 		System.out.println(structureDataRDD.size());
 		System.out.println("TOTAL TIME: "+(System.currentTimeMillis()-start));
 	}

@@ -24,15 +24,15 @@ public class CountContacts {
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 		// Get the atom contacts
-		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD(),
+		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD("/Users/anthony/full"),
 				new AtomSelectObject()
-						.groupNameList(new String[] {"PRO","LYS"})
+//						.groupNameList(new String[] {"PRO","LYS"})
 						.elementNameList(new String[] {"C"})
 						.atomNameList(new String[] {"CA"}),
 						cutoff)
 				.getDistanceDistOfAtomInts("CA", "CA")
 				.mean();
-		System.out.println("\nMean PRO-LYS CA-CA distance: "+mean);
+		System.out.println("\nMean CA-CA distance: "+mean);
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 		SparkUtils.shutdown();
 	}

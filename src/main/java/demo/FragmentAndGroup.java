@@ -1,6 +1,7 @@
 package demo;
 
 import org.rcsb.mmtf.spark.data.SegmentClusters;
+import org.rcsb.mmtf.spark.data.SegmentDataRDD;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
@@ -15,8 +16,10 @@ public class FragmentAndGroup {
 	 * @param args
 	 */
 	public static void main(String[] args) {		
-		SegmentClusters fragCLusters = new StructureDataRDD().getFragments(8).groupBySequence();
-		System.out.println(fragCLusters.size());
+		Long startTime = System.currentTimeMillis();
+		SegmentDataRDD fragCLusters = new StructureDataRDD("/Users/anthony/full").getFragments(8);
+		System.out.println(fragCLusters.getLengthDist().mean());
+		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 	}
 	
 }
