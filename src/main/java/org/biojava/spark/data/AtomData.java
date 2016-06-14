@@ -17,13 +17,14 @@ import org.rcsb.mmtf.spark.utils.SparkUtils;
 public class AtomData {
 
 	private Dataset<Atom> atomDataset;
+	private JavaRDD<Atom> atomRdd;
 
 	/**
 	 * Construct from an {@link JavaRDD} 
 	 * @param atomRdd the input {@link JavaRDD}
 	 */
 	public AtomData(JavaRDD<Atom> atomRdd) {
-		this.atomDataset = SparkUtils.convertToDataset(atomRdd, Atom.class);
+		this.atomRdd = atomRdd;
 	}
 
 	/**
@@ -48,7 +49,7 @@ public class AtomData {
 	 * and the number of times they appear in the RDD
 	 */
 	public  Map<String, Long>  countByElement() {
-		return SparkUtils.getJavaRdd(atomDataset,  Atom.class)
+		return atomRdd
 				.map(t -> t.getElement().toString())
 				.countByValue();
 	}
@@ -59,7 +60,7 @@ public class AtomData {
 	 * and the number of times they appear in the RDD
 	 */
 	public  Map<String, Long>   countByAtomName() {
-		return SparkUtils.getJavaRdd(atomDataset,  Atom.class)
+		return atomRdd
 				.map(t -> t.getName())
 				.countByValue();
 
