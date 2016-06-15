@@ -17,7 +17,7 @@ import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.ecod.EcodDatabase;
 import org.biojava.nbio.structure.ecod.EcodDomain;
 import org.biojava.nbio.structure.ecod.EcodFactory;
-import org.biojava.spark.ClusterSequences;
+import org.biojava.spark.utils.ClusterSequences;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import scala.Tuple2;
