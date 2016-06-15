@@ -50,7 +50,7 @@ tar -xvf reduced.tar
 
 ### Finding inter-atomic contacts from the PDB
 
-```
+```java
 		Double mean = BiojavaSparkUtils.findContacts(structureData,
 				new AtomSelectObject()
 						.groupNameList(new String[] {"PRO","LYS"})
