@@ -57,11 +57,11 @@ import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.encoder.AdapterToStructureData;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 import org.rcsb.mmtf.spark.data.Segment;
 import org.rcsb.mmtf.spark.data.SegmentDataRDD;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
-import org.rcsb.mmtf.spark.utils.SparkUtils;
 
 import scala.Tuple2;
 
@@ -196,6 +196,7 @@ public class BiojavaSparkUtils {
 		List<String> atomNames = atomSelectObject.getAtomNameList();
 		List<String> elementNames = atomSelectObject.getElementNameList();
 		List<String> groupNames = atomSelectObject.getGroupNameList();
+		List<String> groupAtomNames = atomSelectObject.getAtomNameList();
 		boolean charged = atomSelectObject.isCharged();
 		String groupType = atomSelectObject.getGroupType();
 
@@ -213,6 +214,9 @@ public class BiojavaSparkUtils {
 		}
 		if(groupType!=null){
 			atomStream = atomStream.filter(atom -> atom.getGroup().getChemComp().getType().equals(groupType));
+		}
+		if(groupAtomNames!=null && groupAtomNames.size()!=0){
+			atomStream = atomStream.filter(atom -> groupAtomNames.contains(getGroupAtomName(atom)));
 		}
 		return atomStream.collect(Collectors.toList());
 	}
@@ -395,6 +399,16 @@ public class BiojavaSparkUtils {
 		}));
 	}
 
+
+	/**
+	 * Get a conjoined group atom name from an atom.
+	 * @param atom the input atom
+	 * @return the String describing the conjoined group atom name.
+	 */
+	public static String getGroupAtomName(Atom atom) {
+		return atom.getGroup().getPDBName()+"_"+atom.getName();
+	}
+
 	/**
 	 * Function (for benchmarking) to get a {@link StructureDataRDD} from a Hadoop file of mmCIF data.
 	 * @param filePath the path of the Hadoop sequnece file
@@ -461,6 +475,4 @@ public class BiojavaSparkUtils {
 		System.err.println("ERROR FINDING ENTITY FOR CHAIN: "+chainInd);
 		return "NULL";
 	}
-
-
 }

@@ -5,12 +5,10 @@ import java.util.Map;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.biojava.nbio.structure.Atom;
-import org.rcsb.mmtf.spark.utils.SparkUtils;
-
-
+import org.biojava.spark.utils.BiojavaSparkUtils;
 
 /**
- * A class of accessor functions to an Atom data RDD object
+ * A wrapper around {@link JavaRDD} and {@link Dataset} of atoms.
  * @author Anthony Bradley
  *
  */
@@ -33,6 +31,15 @@ public class AtomData {
 	 */
 	public AtomData(Dataset<Atom> atomDataset) {
 		this.atomDataset = atomDataset;
+	}
+	
+	/**
+	 * Get the underlying {@link JavaRDD} for this {@link AtomDataRDD}.
+	 * @return the underlying {@link JavaRDD} for this {@link AtomDataRDD}
+	 */
+	public JavaRDD<Atom> getRdd() {
+		return atomRdd;
+		
 	}
 
 	/**
@@ -63,8 +70,19 @@ public class AtomData {
 		return atomRdd
 				.map(t -> t.getName())
 				.countByValue();
-
 	}
+	
+	/**
+	 * Get the unique group atom name combinations in this.
+	 * @return the map of counts by a given atom name
+	 */
+	public Map<String, Long> countByGroupAtomName() {
+		return atomRdd
+				.map(t -> BiojavaSparkUtils.getGroupAtomName(t))
+				.countByValue();
+	}
+
+	
 
 
 

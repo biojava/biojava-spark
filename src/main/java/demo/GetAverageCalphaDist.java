@@ -1,8 +1,7 @@
 package demo;
 
-
-import org.rcsb.mmtf.spark.data.StructureDataRDD;
 import org.rcsb.mmtf.spark.utils.SparkUtils;
+import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
  * Example of mapping the PDB to chains of just C-alpha coords.

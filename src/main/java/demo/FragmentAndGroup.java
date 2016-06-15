@@ -1,6 +1,5 @@
 package demo;
 
-import org.rcsb.mmtf.spark.data.SegmentClusters;
 import org.rcsb.mmtf.spark.data.SegmentDataRDD;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 

@@ -19,7 +19,7 @@ Or you can get a C-alpha, phosphate, ligand only version (~800 Mb download)
 wget http://mmtf.rcsb.org/v0.2/hadoopfiles/reduced.tar
 tar -xvf reduced.tar
 ```
-### Second add the mmtf-spark dependecy to your pom
+### Second add the biojava-spark dependecy to your pom
 
 ```xml
 		<dependency>
@@ -50,7 +50,7 @@ tar -xvf reduced.tar
 
 ### Finding inter-atomic contacts from the PDB
 
-```
+```java
 		Double mean = BiojavaSparkUtils.findContacts(structureData,
 				new AtomSelectObject()
 						.groupNameList(new String[] {"PRO","LYS"})
