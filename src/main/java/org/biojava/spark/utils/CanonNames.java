@@ -77,7 +77,7 @@ public class CanonNames {
 	 * @param stringTwo the second {@link String} input
 	 * @return the canonicalised combined {@link String}.
 	 */
-	public static String getCanonStrings(String stringOne, String stringTwo) {
+	private static String getCanonStrings(String stringOne, String stringTwo) {
 		List<String> groupList = new ArrayList<>();
 		groupList.add(stringOne);
 		groupList.add(stringTwo);

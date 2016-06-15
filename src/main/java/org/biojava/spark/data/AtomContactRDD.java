@@ -8,8 +8,13 @@ import java.util.Map;
 import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.biojava.nbio.structure.AminoAcidImpl;
 import org.biojava.nbio.structure.Atom;
+import org.biojava.nbio.structure.AtomImpl;
+import org.biojava.nbio.structure.Element;
+import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.contact.AtomContact;
+import org.biojava.nbio.structure.contact.Pair;
 import org.biojava.spark.utils.CanonNames;
 
 import scala.Tuple2;
@@ -71,7 +76,8 @@ public class AtomContactRDD implements Serializable {
 	 * @return the map of atom contact types and the distances
 	 */
 	public JavaDoubleRDD getDistanceDistOfAtomInts(String atomName, String otherAtomName) {
-		return atomContactRdd.filter(t -> CanonNames.getCanonAtomNames(t).equals(CanonNames.getCanonStrings(atomName, otherAtomName)))
+		return atomContactRdd.filter(t -> CanonNames.getCanonAtomNames(t).equals(CanonNames.getCanonAtomNames(
+				atomAtomContact(atomName, otherAtomName))))
 				.mapToDouble(t -> t.getDistance());
 	}
 
@@ -94,10 +100,11 @@ public class AtomContactRDD implements Serializable {
 	 */
 	public Long countInterGroupContacts(String groupNameOne, String groupNameTwo) {
 		return atomContactRdd
-				.filter(t -> CanonNames.getCanonGroups(t).equals(CanonNames.getCanonStrings(groupNameOne, groupNameTwo)))
+				.filter(t -> CanonNames.getCanonGroups(t).equals(CanonNames.getCanonGroups(
+						groupGroupContact(groupNameOne, groupNameTwo))))
 				.count();
 	}
-	
+
 	/**
 	 * Get the number of inter-element contacts for a given pair of element names.
 	 * @param elementOne the name of the first element (e.g. Ca for Calcium)
@@ -106,11 +113,14 @@ public class AtomContactRDD implements Serializable {
 	 */
 	public Long countInterElementContacts(String elementOne, String elementTwo) {
 		return atomContactRdd
-				.filter(t -> CanonNames.getCanonElementNames(t).equals(CanonNames.getCanonStrings(elementOne, elementTwo)))
+				.filter(t -> CanonNames.getCanonElementNames(t).equals(CanonNames.getCanonElementNames(
+						elementElementContact(elementOne, elementTwo))))
 				.count();
 	}
 	
 	
+
+
 	/**
 	 * Get the number of inter-atom name contacts for a given pair of atoms names.
 	 * @param atomNameOne the name of the first atom name (e.g. CA for C-alpha)
@@ -118,11 +128,13 @@ public class AtomContactRDD implements Serializable {
 	 * @return the number of contacts between these two groups
 	 */
 	public Long countInterAtomContacts(String atomNameOne, String atomNameTwo) {
+		
 		return atomContactRdd
-				.filter(t -> CanonNames.getCanonAtomNames(t).equals(CanonNames.getCanonStrings(atomNameOne, atomNameTwo)))
+				.filter(t -> CanonNames.getCanonAtomNames(t).equals(CanonNames.getCanonAtomNames(
+						atomAtomContact(atomNameOne,atomNameTwo))))
 				.count();
 	}
-	
+
 
 	/**
 	 * Get a map counting the number of interactions between atom names.
@@ -229,5 +241,33 @@ public class AtomContactRDD implements Serializable {
 		}
 		return false;
 	}
+	
+	private AtomContact atomAtomContact(String atomNameOne, String atomNameTwo) {
+		Atom atomOne = new AtomImpl();
+		atomOne.setName(atomNameOne);
+		Atom atomTwo = new AtomImpl();
+		atomTwo.setName(atomNameTwo);
+		return new AtomContact(new Pair<Atom>(atomOne, atomTwo), 0);
+	}
 
+	private AtomContact elementElementContact(String elementOne, String elementTwo) {
+		Atom atomOne = new AtomImpl();
+		atomOne.setElement(Element.valueOfIgnoreCase(elementOne));
+		Atom atomTwo = new AtomImpl();
+		atomTwo.setElement(Element.valueOfIgnoreCase(elementTwo));
+		return new AtomContact(new Pair<Atom>(atomOne, atomTwo), 0);
+	}
+	
+	private AtomContact groupGroupContact(String groupNameOne, String groupNameTwo) {
+		Atom atomOne = new AtomImpl();
+		Group groupOne = new AminoAcidImpl();
+		groupOne.setPDBName(groupNameOne);
+		atomOne.setGroup(groupOne);
+		Atom atomTwo = new AtomImpl();
+		Group groupTwo = new AminoAcidImpl();
+		groupTwo.setPDBName(groupNameTwo);
+		atomTwo.setGroup(groupTwo);
+		return new AtomContact(new Pair<Atom>(atomOne, atomTwo), 0);
+	}
+	
 }
