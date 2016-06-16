@@ -53,9 +53,9 @@
 	</properties>
 
 	<scm>
-		<connection>scm:git:git://github.com:abradle/biojava-spark.git</connection>
-		<developerConnection>scm:git:git@github.com:abradle/biojava-spark.git</developerConnection>
-		<url>https://github.com/abradle/biojava-spark</url>
+		<connection>scm:git:git://github.com:biojava/biojava-spark.git</connection>
+		<developerConnection>scm:git:git@github.com:biojava/biojava-spark.git</developerConnection>
+		<url>https://github.com/biojava/biojava-spark</url>
 		<tag>biojava-spark-0.1.0</tag>
 	</scm>
 
