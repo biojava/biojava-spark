@@ -196,7 +196,6 @@ public class BiojavaSparkUtils {
 		List<String> atomNames = atomSelectObject.getAtomNameList();
 		List<String> elementNames = atomSelectObject.getElementNameList();
 		List<String> groupNames = atomSelectObject.getGroupNameList();
-		List<String> groupAtomNames = atomSelectObject.getAtomNameList();
 		boolean charged = atomSelectObject.isCharged();
 		String groupType = atomSelectObject.getGroupType();
 
@@ -214,9 +213,6 @@ public class BiojavaSparkUtils {
 		}
 		if(groupType!=null){
 			atomStream = atomStream.filter(atom -> atom.getGroup().getChemComp().getType().equals(groupType));
-		}
-		if(groupAtomNames!=null && groupAtomNames.size()!=0){
-			atomStream = atomStream.filter(atom -> groupAtomNames.contains(getGroupAtomName(atom)));
 		}
 		return atomStream.collect(Collectors.toList());
 	}

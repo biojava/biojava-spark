@@ -22,7 +22,7 @@ public class GetAverageCalphaDist {
 		Long startTime = System.currentTimeMillis();
 
 		Double meanCalphaLength = 
-				new StructureDataRDD()
+				new StructureDataRDD("/Users/anthony/reduced")
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalpha()

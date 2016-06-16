@@ -1,10 +1,13 @@
 package org.biojava.spark.utils;
 
-import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.junit.Test;
-
-public class TestBasic {
+/**
+ * A basic test of {@link EntryPoint} class.
+ * @author Anthony Bradley
+ *
+ */
+public class TestEntryPoint {
 	
 	@Test
 	public void testBasic(){
