@@ -10,12 +10,12 @@ Algorithms that are built around BioJava and are running on Apache Spark
 ### Some initial instructions can be found on the mmtf-spark project
 https://github.com/rcsb/mmtf-spark
 ## First download and untar a Hadoop sequence file of the PDB (~7 GB download) 
-```
+```bash
 wget http://mmtf.rcsb.org/v0.2/hadoopfiles/full.tar
 tar -xvf full.tar
 ```
 Or you can get a C-alpha, phosphate, ligand only version (~800 Mb download)
-```
+```bash
 wget http://mmtf.rcsb.org/v0.2/hadoopfiles/reduced.tar
 tar -xvf reduced.tar
 ```
@@ -35,16 +35,16 @@ tar -xvf reduced.tar
 
 ### Do some simple quality filtering
 
-```
-	float maxResolution = 3.0;
-	float maxRfree = 0.3;
+```java
+	float maxResolution = 3.0f;
+	float maxRfree = 0.3f;
 	StructureDataRDD structureData = new StructureDataRDD("/path/to/file")
 				.filterResolution(maxResolution)
 				.filterRfree(maxRfree);
 ```
 
 ### Summarsing the elements in the PDB
-```
+```java
 	Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(structureData).countByElement();
 ```
 
