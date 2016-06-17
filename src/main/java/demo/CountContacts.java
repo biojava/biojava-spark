@@ -31,6 +31,7 @@ public class CountContacts {
 		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD("/Users/anthony/full"),
 				new AtomSelectObject()
 						.elementNameList(new String[] {"C"})
+						.groupNameList(new String[] {"PRO","LYS"})
 						.atomNameList(new String[] {"CA"}),
 						cutoff)
 				.getDistanceDistOfAtomInts("CA", "CA")

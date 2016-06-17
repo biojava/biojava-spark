@@ -3,9 +3,33 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>9</version>
+	</parent>
 	<groupId>org.biojava</groupId>
 	<artifactId>biojava-spark</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.1.2-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>mmtf-spark</name>
+	<url>http://maven.apache.org</url>
+
+	<description>Biojava Spark is a series of libraries and functions for using Spark with Biojava.
+    </description>
+	<organization>
+		<name>Biojava</name>
+		<url>http://biojava.org/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Apache 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 
 
 	<properties>
@@ -20,30 +44,22 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 
-		<spark.version>1.6.0</spark.version>
 		<scala.version>2.11</scala.version>
 		<slf4j.version>1.7.20</slf4j.version>
 		<log4j.version>2.5</log4j.version>
-		<mmtf.version>0.2.0</mmtf.version>
+		<mmtf.version>0.2.1</mmtf.version>
+		<mmtf-spark.version>0.0.4</mmtf-spark.version>
+		<additionalparam>-Xdoclint:none</additionalparam>
 	</properties>
 
-	<dependencies>
+	<scm>
+		<connection>scm:git:git://github.com:biojava/biojava-spark.git</connection>
+		<developerConnection>scm:git:git@github.com:biojava/biojava-spark.git</developerConnection>
+		<url>https://github.com/biojava/biojava-spark</url>
+		<tag>biojava-spark-0.1.0</tag>
+	</scm>
 
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-core_${scala.version}</artifactId>
-			<version>${spark.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-nop</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+	<dependencies>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -73,22 +89,6 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.spark</groupId>
-			<artifactId>spark-sql_${scala.version}</artifactId>
-			<version>${spark.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-nop</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
 
 		<dependency>
 			<groupId>net.sourceforge.argparse4j</groupId>
@@ -110,7 +110,7 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-spark</artifactId>
-			<version>0.0.3</version>
+			<version>${mmtf-spark.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>
@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>org.rcsb</groupId>
 			<artifactId>mmtf-api</artifactId>
-            <version>${mmtf.version}</version>
+			<version>${mmtf.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jgrapht</groupId>
@@ -137,8 +137,51 @@
 
 	<build>
 		<pluginManagement>
-			<plugins>
 
+
+			<plugins>
+				<plugin>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<version>2.10</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.6</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-scm-plugin</artifactId>
+					<version>1.9.4</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.0.0</version>
+				</plugin>
+				<plugin>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>2.19.1</version>
+				</plugin>
+				<plugin>
+					<groupId>net.sf</groupId>
+					<artifactId>stat-scm</artifactId>
+					<version>1.2.0</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jvnet.jaxb2.maven2</groupId>
+					<artifactId>maven-jaxb2-plugin</artifactId>
+					<version>0.13.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5.3</version>
+					<configuration>
+						<remoteTagging>true</remoteTagging>
+						<preparationGoals>clean install</preparationGoals>
+						<autoVersionSubmodules>true</autoVersionSubmodules>
+						<!-- work around for GPG hanging issue http://jira.codehaus.org/browse/MGPG-9 -->
+						<mavenExecutorId>forked-path</mavenExecutorId>
+					</configuration>
+				</plugin>
 				<plugin>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.3</version>
@@ -201,6 +244,18 @@
 				</executions>
 				<configuration>
 					<finalName>uber-${project.artifactId}-${project.version}</finalName>
+				</configuration>
+			</plugin>
+			<!-- for deployment on OSS Sonatype -->
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.7</version>
+				<extensions>true</extensions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
 				</configuration>
 			</plugin>
 		</plugins>
