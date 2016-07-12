@@ -21,8 +21,14 @@ public class CountElements {
 
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
-		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD("/Users/anthony/full")).countByElement();
+
+		// assumes that files are in installed in $HOME/mmtf/full/
+		String userHome = System.getProperty("user.home");
+
+		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD(userHome + "/mmtf/full")).countByElement();
+
 		System.out.println("\nElement map"+elementCountMap);
+
 		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 	}
 
