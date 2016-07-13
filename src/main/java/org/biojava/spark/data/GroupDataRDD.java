@@ -58,8 +58,8 @@ public class GroupDataRDD {
 	 * Get the atoms from the groups.
 	 * @return the atoms for all the groups
 	 */
-	public AtomDataRDD getAtoms() {
-		return new AtomDataRDD(
+	public AtomData getAtoms() {
+		return new AtomData(
 				groupRdd
 				.flatMap(t -> t._2.getAtoms()));
 	}

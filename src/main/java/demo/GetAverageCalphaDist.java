@@ -1,7 +1,6 @@
-package org.biojava.spark.examples;
+package demo;
 
-
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.rcsb.mmtf.spark.utils.SparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
@@ -19,11 +18,14 @@ public class GetAverageCalphaDist {
 	 */
 	public static void main(String[] args) {
 
+		// assumes that files are in installed in $HOME/mmtf/reduced/
+		String userHome = System.getProperty("user.home");
+
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 
 		Double meanCalphaLength = 
-				new StructureDataRDD()
+				new StructureDataRDD( userHome + "/mmtf/reduced")
 				.filterResolution(3.0)
 				.filterRfree(0.3)
 				.getCalpha()

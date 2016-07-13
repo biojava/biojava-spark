@@ -1,4 +1,4 @@
-package org.biojava.spark;
+package org.biojava.spark.utils;
 
 
 import org.apache.spark.api.java.JavaPairRDD;
@@ -9,6 +9,9 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.*;
 import org.apache.spark.broadcast.Broadcast;
 
+import org.biojava.spark.filter.FilterCombinations;
+import org.biojava.spark.filter.FilterRemainingSequences;
+import org.biojava.spark.filter.FilterSignificantResults;
 import org.biojava.spark.function.*;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.alg.ConnectivityInspector;

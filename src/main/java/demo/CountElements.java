@@ -1,9 +1,8 @@
-package org.biojava.spark.examples;
+package demo;
 
 import java.util.Map;
 
-import org.biojava.spark.BiojavaSparkUtils;
-import org.rcsb.mmtf.spark.SparkUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 
 /**
@@ -22,12 +21,15 @@ public class CountElements {
 
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
-		
-		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD()).countByElement();
-		System.out.println("\nElement map"+elementCountMap);
-		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
-		SparkUtils.shutdown();
 
+		// assumes that files are in installed in $HOME/mmtf/full/
+		String userHome = System.getProperty("user.home");
+
+		Map<String, Long> elementCountMap = BiojavaSparkUtils.findAtoms(new StructureDataRDD(userHome + "/mmtf/full")).countByElement();
+
+		System.out.println("\nElement map"+elementCountMap);
+
+		System.out.println("Found in "+(System.currentTimeMillis()-startTime)+" ms");
 	}
 
 }

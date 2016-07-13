@@ -2,7 +2,6 @@ package demo;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.sql.DataFrame;
@@ -12,9 +11,7 @@ import org.biojava.nbio.structure.Chain;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureException;
 import org.biojava.nbio.structure.align.util.AtomCache;
-import org.biojava.nbio.structure.ecod.EcodFactory;
-import org.biojava.nbio.structure.ecod.EcodInstallation;
-import org.biojava.spark.ClusterSequences;
+import org.biojava.spark.utils.ClusterSequences;
 import scala.Tuple2;
 
 import java.io.IOException;

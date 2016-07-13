@@ -8,7 +8,7 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.biojava.nbio.structure.Atom;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
-import org.biojava.spark.BiojavaSparkUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 
@@ -28,8 +28,12 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 	private double cutoff;
 	private AtomSelectObject selectObjectOne;
 	private AtomSelectObject selectObjectTwo;
+	private boolean fast = true;
 
 	/**
+	 * 
+	 * @param selectObjectOne
+	 * @param selectObjectTwo
 	 * @param cutoff
 	 */
 	public CalculateContacts(AtomSelectObject selectObjectOne, 
@@ -37,6 +41,21 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 		this.cutoff = cutoff;
 		this.selectObjectOne = selectObjectOne;
 		this.selectObjectTwo = selectObjectTwo;
+	}
+
+	/**
+	 * 
+	 * @param selectObjectOne
+	 * @param selectObjectTwo
+	 * @param cutoff
+	 * @param fast
+	 */
+	public CalculateContacts(AtomSelectObject selectObjectOne, 
+			AtomSelectObject selectObjectTwo, double cutoff, boolean fast) {
+		this.cutoff = cutoff;
+		this.selectObjectOne = selectObjectOne;
+		this.selectObjectTwo = selectObjectTwo;
+		this.fast = fast;
 	}
 
 
@@ -66,14 +85,20 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 		if(atomListTwo.size()>0){
 			List<Atom> atomListOne = BiojavaSparkUtils.getAtoms(structure, selectObjectTwo);
 			if(atomListOne.size()>0){
-				AtomContactSet atomContactSet = BiojavaSparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
+				AtomContactSet atomContactSet;
+				if(fast==true){
+					atomContactSet = BiojavaSparkUtils.getAtomContacts(atomListOne, atomListTwo, cutoff);
+				}
+				else{
+					atomContactSet = BiojavaSparkUtils.getAtomContactsSlow(atomListOne, atomListTwo, cutoff);
+				}
 				for(AtomContact atomContact : atomContactSet){
 					// Maybe add a filter here to ensure they're not 
 					// in the same group
 					Atom atomOne = atomContact.getPair().getFirst();
 					Atom atomTwo = atomContact.getPair().getSecond();
 					// They shouldn't be part of the same group
-					if(!atomOne.getGroup().getResidueNumber().getSeqNum().equals(atomTwo.getGroup().getResidueNumber().getSeqNum())){
+					if(!atomOne.getGroup().getResidueNumber().equals(atomTwo.getGroup().getResidueNumber())){
 						// This is how we write out each line in the file
 						outList.add(atomContact);
 					}

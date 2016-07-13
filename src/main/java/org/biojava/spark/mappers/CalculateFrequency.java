@@ -3,7 +3,7 @@ package org.biojava.spark.mappers;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.biojava.nbio.structure.Atom;
-import org.biojava.spark.BiojavaSparkUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
 

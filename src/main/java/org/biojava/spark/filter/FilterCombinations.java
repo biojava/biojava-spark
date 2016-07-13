@@ -1,4 +1,4 @@
-package org.biojava.spark.function;
+package org.biojava.spark.filter;
 
 import org.apache.spark.api.java.function.Function;
 import scala.Tuple2;
