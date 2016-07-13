@@ -2,9 +2,10 @@ package demo;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
+
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
+
 import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.sql.DataFrame;
 import org.apache.spark.sql.Row;
@@ -17,6 +18,10 @@ import org.biojava.nbio.structure.align.util.UserConfiguration;
 import org.biojava.nbio.structure.ecod.EcodDatabase;
 import org.biojava.nbio.structure.ecod.EcodDomain;
 import org.biojava.nbio.structure.ecod.EcodFactory;
+
+
+import org.biojava.spark.function.PrintClusterInfo;
+
 import org.biojava.spark.utils.ClusterSequences;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
@@ -24,6 +29,7 @@ import scala.Tuple2;
 import scala.Tuple5;
 
 import java.io.*;
+import java.util.Iterator;
 import java.util.List;
 
 
@@ -42,7 +48,9 @@ public class DemoClusterSequences implements Serializable{
     // break up the calculation in 10 fractions
     // each fraction will have the all vs. all calculation performed
     // and clustering will be merged
-    private static final int nrFractions = 10;
+    private static final int nrFractions = 5;
+
+    private static final int nrIterations = 100;
 
     public static void main(String[] args){
 
@@ -94,8 +102,9 @@ public class DemoClusterSequences implements Serializable{
 
         System.err.println("TOTAL TIME: " + ( timeE-timeS)/100 + " sec.");
 
-
     }
+
+
 
     private void clusterAllEcodDomains(File jsonFile) {
         SparkConf conf = new SparkConf()
@@ -143,22 +152,24 @@ public class DemoClusterSequences implements Serializable{
         long timeS = System.currentTimeMillis();
         ClusterSequences cluster = new ClusterSequences(nrFractions, MIN_OVERLAP, MIN_OVERLAP,MIN_PERCID );
 
-        JavaPairRDD results = cluster.clusterSequences(sc,sequences,5);
+        JavaPairRDD<String,Iterable<String>> results = cluster.clusterSequences(sc,sequences,nrIterations);
 
-        results.foreach(t-> System.out.println("FINAL CLUSTER: " + t));
+        int totalCount = 0;
+        if ( results != null && ! results.isEmpty())
+            results.foreach(t->
+                System.out.println("FINAL CLUSTER: " + t)
+              );
 
 
-        /*
-        JavaRDD hits = results.filter(t -> t._3() > MIN_OVERLAP && t._4() > MIN_OVERLAP && t._5() > MIN_PERCID);
+        List<Tuple2<String,Iterable<String>>>  clusters = results.collect();
 
-        hits = hits.repartition(1);
+        System.out.println("Got " + clusters.size() + " sequence clusters.");
 
-        hits.foreach(new VoidFunction() {
-            @Override
-            public void call(Object o) throws Exception {
-                System.out.println(o);
-            }
-        });
+
+        PrintClusterInfo printClusterInfo = new PrintClusterInfo(clusters);
+
+        sequences.foreach(printClusterInfo);
+
 
 
 //        try {
@@ -169,7 +180,7 @@ public class DemoClusterSequences implements Serializable{
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-*/
+
         long timeE = System.currentTimeMillis();
         long runTime = (timeE- timeS);
         System.out.println("clustering took " + (runTime/1000) + " sec. ");

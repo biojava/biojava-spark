@@ -14,8 +14,12 @@ public class ReadFromMmcif {
 	 * @param args
 	 */
 	public static void main(String[] args){
+
+		// assumes that files are in installed in $HOME/mmtf/full/
+		String userHome = System.getProperty("user.home");
+
 		long start = System.currentTimeMillis();
-		StructureDataRDD  structureDataRDD = new StructureDataRDD("/Users/anthony/full");//BiojavaSparkUtils.getStructureRDDFromMmcif("/Users/anthony/mmtf-update/mmCIF_TOTAL");
+		StructureDataRDD  structureDataRDD = new StructureDataRDD(userHome + "/mmtf/full");//BiojavaSparkUtils.getStructureRDDFromMmcif("/Users/anthony/mmtf-update/mmCIF_TOTAL");
 		System.out.println(structureDataRDD.size());
 		System.out.println("TOTAL TIME: "+(System.currentTimeMillis()-start));
 	}

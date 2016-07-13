@@ -160,7 +160,6 @@ public class BiojavaSparkUtils {
 	/**
 	 * Get an {@link JavaPairRDD} of {@link String} {@link Structure} from a file path.
 	 * @param filePath the input path to the hadoop sequence file
-	 * @param javaSparkContext the {@link JavaSparkContext} 
 	 * @return the {@link JavaPairRDD} of {@link String} {@link Structure}
 	 */
 	public static JavaPairRDD<String, Structure> getBiojavaRdd(String filePath) {
@@ -183,10 +182,6 @@ public class BiojavaSparkUtils {
 	/**
 	 * Get all the atoms of a given name or in a given group in the structure using a {@link StructureDataInterface}.
 	 * @param structure the input {@link StructureDataInterface}
-	 * @param atomNames the list of allowed atom names
-	 * @param elementNames the list of allowed atom elements
-	 * @param groupNames the list of allowed group names
-	 * @param charged whether the atom needs to be charged
 	 * @return the list of atoms fitting the given criteria
 	 */
 	public static List<Atom> getAtoms(StructureDataInterface structure, AtomSelectObject atomSelectObject) {
@@ -325,7 +320,6 @@ public class BiojavaSparkUtils {
 	/**
 	 * Get all the atoms in the structure using a {@link StructureDataInterface}.
 	 * @param structure the input {@link StructureDataInterface}
-	 * @param isCharged whether you only want charged atoms
 	 * @return the list of atoms
 	 */
 	public static List<Atom> getAtoms(StructureDataInterface structure) {
@@ -339,7 +333,7 @@ public class BiojavaSparkUtils {
 			cc.setType(getTypeFromChainId(structure, chainInd));
 			int numGroups = structure.getGroupsPerChain()[chainInd];
 			Chain chain = new ChainImpl();
-			chain.setId(structure.getChainIds()[chainInd]);
+			chain.setChainID(structure.getChainIds()[chainInd]);
 			// Loop through the groups
 			for(int i=0; i<numGroups; i++) {
 				Group group = new AminoAcidImpl();

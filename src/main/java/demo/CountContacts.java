@@ -25,10 +25,15 @@ public class CountContacts {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+
+
+		// assumes that files are in installed in $HOME/mmtf/full/
+		String userHome = System.getProperty("user.home");
+
 		// Starter counter
 		Long startTime = System.currentTimeMillis();
 		// Get the atom contacts
-		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD("/Users/anthony/full"),
+		Double mean = BiojavaSparkUtils.findContacts(new StructureDataRDD(userHome+"/mmtf/full"),
 				new AtomSelectObject()
 						.elementNameList(new String[] {"C"})
 						.groupNameList(new String[] {"PRO","LYS"})
