@@ -61,7 +61,7 @@ public class GroupDataRDD {
 	public AtomData getAtoms() {
 		return new AtomData(
 				groupRdd
-				.flatMap(t -> t._2.getAtoms()));
+				.flatMap(t -> t._2.getAtoms().iterator()));
 	}
 
 }

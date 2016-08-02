@@ -4,7 +4,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SQLContext;
 import org.biojava.nbio.structure.Chain;
@@ -73,7 +73,7 @@ public class ClusterEcodSequences implements Serializable {
         sqlContext.setConf("spark.sql.parquet.filterPushdown", "true");
 
 
-        DataFrame df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema","true").option("header","true").load(CSV_FILE);
+        Dataset df = sqlContext.read().format("com.databricks.spark.csv").option("inferSchema","true").option("header","true").load(CSV_FILE);
 
         df.printSchema();
 
@@ -84,7 +84,7 @@ public class ClusterEcodSequences implements Serializable {
         df.show();
 
 
-        DataFrame ecodDomains = df.select("ecod_domain_id");
+        Dataset ecodDomains = df.select("ecod_domain_id");
 
 
         // just to be sure, remove duplicates.
