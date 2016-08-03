@@ -2,6 +2,7 @@ package org.biojava.spark.mappers;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.spark.api.java.function.FlatMapFunction;
@@ -65,12 +66,12 @@ public class CalculateContacts implements FlatMapFunction<Tuple2<String,Structur
 	private static final long serialVersionUID = 7102351722106317536L;
 
 	@Override
-	public Iterable<AtomContact> call(Tuple2<String, StructureDataInterface> t) throws Exception {
+	public Iterator<AtomContact> call(Tuple2<String, StructureDataInterface> t) throws Exception {
 		// Get the pdb Id and the structure to loop through
 		String pdbId = t._1;
 		StructureDataInterface structure = t._2;
 		// The list to return all the results in it must match Iterable<Tuple2<String, Float>> (return type of call) and String,
-		return getDist(structure, pdbId, cutoff);
+		return getDist(structure, pdbId, cutoff).iterator();
 	}
 
 	/**

@@ -81,7 +81,7 @@ public class ChainDataRDD {
 					for(Group group :  tuple._2.getAtomGroups()) {
 						outList.add(new Tuple2<String, Group>(group.getPDBName(), group));
 					}
-					return outList;
+					return outList.iterator();
 				}));
 	}
 }

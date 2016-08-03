@@ -275,12 +275,12 @@ public class ClusterSequences implements Serializable {
         // work around the problem described above
         JavaRDD<String> flat = partial.flatMap(new FlatMapFunction<Tuple2<Integer,List<String>>, String>() {
             @Override
-            public Iterable<String> call(Tuple2<Integer, List<String>> integerListTuple2) throws Exception {
+            public Iterator<String> call(Tuple2<Integer, List<String>> integerListTuple2) throws Exception {
 
                 // my highlight of the day
                 //Iterable<String> stuff = JavaConversions.asJavaCollection((scala.collection.convert.Wrappers)integerListTuple2._2);
                 //return stuff;
-                return integerListTuple2._2;
+                return integerListTuple2._2.iterator();
             }
         });
 
@@ -370,11 +370,11 @@ public class ClusterSequences implements Serializable {
 
         JavaRDD<String> allIds = fractionResult.flatMap(new FlatMapFunction<Tuple5<String,String,Float,Float,Float>, String>() {
             @Override
-            public Iterable<String> call(Tuple5<String, String, Float, Float, Float> tuple5) throws Exception {
+            public Iterator<String> call(Tuple5<String, String, Float, Float, Float> tuple5) throws Exception {
                 List<String> lst = new ArrayList<String>();
                 lst.add(tuple5._1());
                 lst.add(tuple5._2());
-                return lst;
+                return lst.iterator();
             }
         }).distinct();
 
@@ -383,13 +383,13 @@ public class ClusterSequences implements Serializable {
 
         JavaRDD<String> clusteredIds = groupedResults.flatMap(new FlatMapFunction<Tuple2<String, Iterable<Tuple5<String,String,Float,Float,Float>>>, String>() {
             @Override
-            public Iterable<String> call(Tuple2<String, Iterable<Tuple5<String,String,Float,Float,Float>>> tuple2) throws Exception {
+            public Iterator<String> call(Tuple2<String, Iterable<Tuple5<String,String,Float,Float,Float>>> tuple2) throws Exception {
                 List<String> lst = new ArrayList<String>();
                 for (Tuple5 t5 : tuple2._2()){
                     lst.add(t5._1().toString());
                     lst.add(t5._2().toString());
                 }
-                return lst;
+                return lst.iterator();
             }
         }).distinct();
 
