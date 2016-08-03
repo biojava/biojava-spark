@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -10,7 +9,7 @@
 	</parent>
 	<groupId>org.biojava</groupId>
 	<artifactId>biojava-spark</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<packaging>jar</packaging>
 
 	<name>mmtf-spark</name>
@@ -57,7 +56,7 @@
 		<connection>scm:git:git://github.com:biojava/biojava-spark.git</connection>
 		<developerConnection>scm:git:git@github.com:biojava/biojava-spark.git</developerConnection>
 		<url>https://github.com/biojava/biojava-spark</url>
-		<tag>biojava-spark-0.1.0</tag>
+		<tag>biojava-spark-0.2.0</tag>
 	</scm>
 
 	<dependencies>
@@ -214,12 +213,10 @@
 								</includes>
 							</artifactSet>
 							<transformers>
-								<transformer
-										implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
 									<resource>reference.conf</resource>
 								</transformer>
-								<transformer
-										implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>akka.Main</Main-Class>
 									</manifestEntries>
