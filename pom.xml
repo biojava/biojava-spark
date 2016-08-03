@@ -9,7 +9,7 @@
 	</parent>
 	<groupId>org.biojava</groupId>
 	<artifactId>biojava-spark</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>mmtf-spark</name>
@@ -56,7 +56,7 @@
 		<connection>scm:git:git://github.com:biojava/biojava-spark.git</connection>
 		<developerConnection>scm:git:git@github.com:biojava/biojava-spark.git</developerConnection>
 		<url>https://github.com/biojava/biojava-spark</url>
-		<tag>biojava-spark-0.2.0</tag>
+		<tag>biojava-spark-0.1.0</tag>
 	</scm>
 
 	<dependencies>
