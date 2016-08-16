@@ -17,7 +17,6 @@ import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.spark.data.StructureDataRDD;
 import org.rcsb.mmtf.spark.utils.SparkUtils;
-import org.rcsb.mmtf.spark.utils.TwoWayHashmap;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;

@@ -9,7 +9,8 @@ import scala.Tuple2;
  */
 public class BuildUndirectedGraph implements VoidFunction<Tuple2<String, String>> {
 
-    Graph graph;
+	private static final long serialVersionUID = -5430001015032969460L;
+	private Graph graph;
 
     public  BuildUndirectedGraph(Graph graph){
 
