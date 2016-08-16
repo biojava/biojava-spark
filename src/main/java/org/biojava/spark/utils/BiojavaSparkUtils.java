@@ -13,6 +13,7 @@ import javax.vecmath.Point3d;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -46,16 +47,20 @@ import org.biojava.nbio.structure.io.mmcif.SimpleMMcifParser;
 import org.biojava.nbio.structure.io.mmcif.model.ChemComp;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureReader;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureWriter;
+import org.biojava.nbio.structure.io.mmtf.MmtfUtils;
 import org.biojava.spark.data.AtomContactRDD;
-import org.biojava.spark.data.AtomData;
+import org.biojava.spark.data.AtomDataRDD;
 import org.biojava.spark.mappers.CalculateContacts;
 import org.biojava.spark.mappers.CalculateFrequency;
+import org.biojava.spark.mappers.PdbIdToMmtf;
+import org.biojava.spark.mappers.StringByteToTextByteWriter;
 import org.rcsb.mmtf.api.StructureDataInterface;
 import org.rcsb.mmtf.dataholders.MmtfStructure;
 import org.rcsb.mmtf.decoder.GenericDecoder;
 import org.rcsb.mmtf.decoder.ReaderUtils;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
 import org.rcsb.mmtf.encoder.AdapterToStructureData;
+import org.rcsb.mmtf.encoder.WriterUtils;
 import org.rcsb.mmtf.serialization.MessagePackSerialization;
 import org.rcsb.mmtf.spark.utils.SparkUtils;
 import org.rcsb.mmtf.spark.data.AtomSelectObject;
@@ -145,16 +150,16 @@ public class BiojavaSparkUtils {
 	 * @param selectObjectOne the type of atom to find
 	 * @return the {@link JavaRDD} of {@link Atom} objects
 	 */
-	public static AtomData findAtoms(StructureDataRDD structureDataRDD, AtomSelectObject selectObjectOne) {
-		return new AtomData(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(selectObjectOne)));
+	public static AtomDataRDD findAtoms(StructureDataRDD structureDataRDD, AtomSelectObject selectObjectOne) {
+		return new AtomDataRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(selectObjectOne)));
 	}
 
 	/**
 	 * Find all the atoms in the RDD.
 	 * @return the {@link JavaRDD} of {@link Atom} objects
 	 */
-	public static AtomData findAtoms(StructureDataRDD structureDataRDD) {
-		return new AtomData(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(new AtomSelectObject())));
+	public static AtomDataRDD findAtoms(StructureDataRDD structureDataRDD) {
+		return new AtomDataRDD(structureDataRDD.getJavaRdd().flatMap(new CalculateFrequency(new AtomSelectObject())));
 	}
 
 	/**
@@ -327,13 +332,12 @@ public class BiojavaSparkUtils {
 		int lastNumGroup = 0;
 		int atomCounter = 0;
 		for(int chainInd=0; chainInd<structure.getChainsPerModel()[0]; chainInd++){
-
 			// Set the type
 			ChemComp cc = new ChemComp();
 			cc.setType(getTypeFromChainId(structure, chainInd));
 			int numGroups = structure.getGroupsPerChain()[chainInd];
 			Chain chain = new ChainImpl();
-			chain.setChainID(structure.getChainIds()[chainInd]);
+			chain.setId(structure.getChainIds()[chainInd]);
 			// Loop through the groups
 			for(int i=0; i<numGroups; i++) {
 				Group group = new AminoAcidImpl();
@@ -464,5 +468,22 @@ public class BiojavaSparkUtils {
 		}
 		System.err.println("ERROR FINDING ENTITY FOR CHAIN: "+chainInd);
 		return "NULL";
+	}
+	
+	
+	/**
+	 * Write a list of PDB ids to a hadoop sequence file in MMTF format.
+	 * @param pdbCodeList the input list of PDB ids
+	 */
+	public static void writeToFile(List<String> pdbCodeList, String uri, String producer) {
+		JavaSparkContext javaSparkContext = SparkUtils.getSparkContext();
+		MmtfUtils.setUpBioJava();
+		JavaPairRDD<Text, BytesWritable> distData =
+				javaSparkContext.parallelize(pdbCodeList)
+				.mapToPair(new PdbIdToMmtf(producer))
+				.mapToPair(t -> new Tuple2<String, byte[]>(t._1, WriterUtils.gzipCompress(t._2)))
+				.mapToPair(new StringByteToTextByteWriter());
+		distData.saveAsHadoopFile(uri, Text.class, BytesWritable.class, SequenceFileOutputFormat.class);
+		javaSparkContext.close();
 	}
 }

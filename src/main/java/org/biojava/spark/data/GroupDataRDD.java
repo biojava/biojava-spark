@@ -16,8 +16,6 @@ public class GroupDataRDD {
 	 * The String is the name of the Group. */
 	private JavaPairRDD<String, Group> groupRdd;
 	
-	
-	
 	/**
 	 * Constructor of the RDD from a {@link JavaPairRDD} of {@link Group}
 	 * @param groupRdd the input {@link JavaPairRDD} of {@link Group}
@@ -25,7 +23,6 @@ public class GroupDataRDD {
 	public GroupDataRDD(JavaPairRDD<String, Group> groupRdd) {
 		this.groupRdd = groupRdd.cache();
 	}
-	
 	
 	/**
 	 * Cache the data - for multi-processing.
@@ -58,8 +55,8 @@ public class GroupDataRDD {
 	 * Get the atoms from the groups.
 	 * @return the atoms for all the groups
 	 */
-	public AtomData getAtoms() {
-		return new AtomData(
+	public AtomDataRDD getAtoms() {
+		return new AtomDataRDD(
 				groupRdd
 				.flatMap(t -> t._2.getAtoms().iterator()));
 	}

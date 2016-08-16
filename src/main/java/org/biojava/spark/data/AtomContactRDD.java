@@ -192,7 +192,7 @@ public class AtomContactRDD implements Serializable {
 	
 	/**
 	 * Get the associate group ids
-	 * @return the list of assicated group ids
+	 * @return the list of associated group ids
 	 */
 	public List<String> getGroupIds()  {
 		return getPairs().map(t -> t._1.getGroup().getPDBName()).collect();
@@ -210,8 +210,8 @@ public class AtomContactRDD implements Serializable {
 	 * Get the contacts as an {@link AtomDataRDD}
 	 * @return an {@link AtomDataRDD} of all the atoms found in these contacts
 	 */
-	public AtomData getAtoms() {
-		return new AtomData(getPairs().flatMap(t -> Arrays.asList(new Atom[]{t._1,t._2}).iterator()));
+	public AtomDataRDD getAtoms() {
+		return new AtomDataRDD(getPairs().flatMap(t -> Arrays.asList(new Atom[]{t._1,t._2}).iterator()));
 	}
 	
 	private boolean findElementElementContacts(AtomContact t, String atomName1, String atomName2) {

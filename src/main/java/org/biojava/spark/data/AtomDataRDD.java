@@ -12,7 +12,7 @@ import org.biojava.spark.utils.BiojavaSparkUtils;
  * @author Anthony Bradley
  *
  */
-public class AtomData {
+public class AtomDataRDD {
 
 	private Dataset<Atom> atomDataset;
 	private JavaRDD<Atom> atomRdd;
@@ -21,7 +21,7 @@ public class AtomData {
 	 * Construct from an {@link JavaRDD} 
 	 * @param atomRdd the input {@link JavaRDD}
 	 */
-	public AtomData(JavaRDD<Atom> atomRdd) {
+	public AtomDataRDD(JavaRDD<Atom> atomRdd) {
 		this.atomRdd = atomRdd;
 	}
 
@@ -29,7 +29,7 @@ public class AtomData {
 	 * Construct from a {@link Dataset}
 	 * @param atomDataset the input {@link Dataset}
 	 */
-	public AtomData(Dataset<Atom> atomDataset) {
+	public AtomDataRDD(Dataset<Atom> atomDataset) {
 		this.atomDataset = atomDataset;
 	}
 	
