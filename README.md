@@ -5,7 +5,7 @@ Algorithms that are built around BioJava and are running on Apache Spark
 [![Build Status](https://travis-ci.org/biojava/biojava-spark.svg?branch=master)](https://travis-ci.org/biojava/biojava-spark)
 [![License](http://img.shields.io/badge/license-LGPL_2.1-blue.svg?style=flat)](https://github.com/biojava/biojava/blob/master/LICENSE)
 [![Status](http://img.shields.io/badge/status-experimental-red.svg?style=flat)](https://github.com/biojava/biojava-spark)
-[![Version](http://img.shields.io/badge/version-0.2.0-blue.svg?style=flat)](https://github.com/biojava/biojava-spark/)
+[![Version](http://img.shields.io/badge/version-0.2.1-blue.svg?style=flat)](https://github.com/biojava/biojava-spark/)
 
 # Starting up
 
@@ -13,12 +13,12 @@ Algorithms that are built around BioJava and are running on Apache Spark
 https://github.com/rcsb/mmtf-spark
 ## First download and untar a Hadoop sequence file of the PDB (~7 GB download) 
 ```bash
-wget http://mmtf.rcsb.org/v0.2/hadoopfiles/full.tar
+wget http://mmtf.rcsb.org/v1.0/hadoopfiles/full.tar
 tar -xvf full.tar
 ```
 Or you can get a C-alpha, phosphate, ligand only version (~800 Mb download)
 ```bash
-wget http://mmtf.rcsb.org/v0.2/hadoopfiles/reduced.tar
+wget http://mmtf.rcsb.org/v1.0/hadoopfiles/reduced.tar
 tar -xvf reduced.tar
 ```
 ### Second add the biojava-spark dependecy to your pom
@@ -27,7 +27,7 @@ tar -xvf reduced.tar
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava-spark</artifactId>
-			<version>0.2.0</version>
+			<version>0.2.1</version>
 		</dependency>
 ```
 
