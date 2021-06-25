@@ -38,13 +38,18 @@ import org.biojava.nbio.structure.Group;
 import org.biojava.nbio.structure.ResidueNumber;
 import org.biojava.nbio.structure.Structure;
 import org.biojava.nbio.structure.StructureIO;
+import org.biojava.nbio.structure.align.util.AtomCache;
+import org.biojava.nbio.structure.chem.ChemCompGroupFactory;
+import org.biojava.nbio.structure.chem.DownloadChemCompProvider;
 import org.biojava.nbio.structure.contact.AtomContact;
 import org.biojava.nbio.structure.contact.AtomContactSet;
 import org.biojava.nbio.structure.contact.Grid;
 import org.biojava.nbio.structure.contact.Pair;
-import org.biojava.nbio.structure.io.mmcif.SimpleMMcifConsumer;
-import org.biojava.nbio.structure.io.mmcif.SimpleMMcifParser;
-import org.biojava.nbio.structure.io.mmcif.model.ChemComp;
+import org.biojava.nbio.structure.io.FileParsingParameters;
+import org.biojava.nbio.structure.io.LocalPDBDirectory;
+import org.biojava.nbio.structure.io.StructureFiletype;
+import org.biojava.nbio.structure.io.cif.CifStructureConverter;
+import org.biojava.nbio.structure.chem.ChemComp;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureReader;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureWriter;
 import org.biojava.nbio.structure.io.mmtf.MmtfUtils;
@@ -434,11 +439,7 @@ public class BiojavaSparkUtils {
 	 * @throws IOException 
 	 */
 	private static Structure getStructureFromMmmCifText(byte[] inputText) throws IOException {
-		SimpleMMcifConsumer simpleMMcifConsumer = new SimpleMMcifConsumer();
-		SimpleMMcifParser simpleMMcifParser =  new SimpleMMcifParser();
-		simpleMMcifParser.addMMcifConsumer(simpleMMcifConsumer);
-		simpleMMcifParser.parse(new ByteArrayInputStream(inputText));
-		return simpleMMcifConsumer.getStructure();
+		return CifStructureConverter.fromInputStream(new ByteArrayInputStream(inputText));
 	}
 
 	/**
@@ -477,7 +478,7 @@ public class BiojavaSparkUtils {
 	 */
 	public static void writeToFile(List<String> pdbCodeList, String uri, String producer) {
 		JavaSparkContext javaSparkContext = SparkUtils.getSparkContext();
-		MmtfUtils.setUpBioJava();
+		setUpBioJava();
 		JavaPairRDD<Text, BytesWritable> distData =
 				javaSparkContext.parallelize(pdbCodeList)
 				.mapToPair(new PdbIdToMmtf(producer))
@@ -485,5 +486,55 @@ public class BiojavaSparkUtils {
 				.mapToPair(new StringByteToTextByteWriter());
 		distData.saveAsHadoopFile(uri, Text.class, BytesWritable.class, SequenceFileOutputFormat.class);
 		javaSparkContext.close();
+	}
+
+	/**
+	 * Set up the configuration parameters for BioJava.
+	 */
+	public static AtomCache setUpBioJava() {
+		// Set up the atom cache etc
+		AtomCache cache = new AtomCache();
+		cache.setFiletype(StructureFiletype.CIF);
+
+		// important: we want always to get the mmCIF file from server (sandbox). BioJava default behaviour would read from local cache and we don't want that for updated entries
+		cache.setFetchBehavior(LocalPDBDirectory.FetchBehavior.FORCE_DOWNLOAD);
+
+		FileParsingParameters params = cache.getFileParsingParams();
+		params.setCreateAtomBonds(true);
+		params.setAlignSeqRes(true);
+		params.setParseBioAssembly(true);
+		DownloadChemCompProvider cc = new DownloadChemCompProvider();
+		ChemCompGroupFactory.setChemCompProvider(cc);
+		cc.checkDoFirstInstall();
+		cache.setFileParsingParams(params);
+		StructureIO.setAtomCache(cache);
+		return cache;
+	}
+
+	/**
+	 * Set up the configuration parameters for BioJava.
+	 * @param ccBaseUrl base URL for chemcomp files (in sandbox layout .../H/HEM/HEM.cif) from which chem comp cif files
+	 *                 will be read
+	 */
+	public static AtomCache setUpBioJava(String ccBaseUrl) {
+		// Set up the atom cache etc
+		AtomCache cache = new AtomCache();
+		cache.setFiletype(StructureFiletype.CIF);
+
+		// important: we want always to get the mmCIF file from server (sandbox). BioJava default behaviour would read from local cache and we don't want that for updated entries
+		cache.setFetchBehavior(LocalPDBDirectory.FetchBehavior.FORCE_DOWNLOAD);
+
+		FileParsingParameters params = cache.getFileParsingParams();
+		params.setCreateAtomBonds(true);
+		params.setAlignSeqRes(true);
+		params.setParseBioAssembly(true);
+		DownloadChemCompProvider.serverBaseUrl = ccBaseUrl;
+		DownloadChemCompProvider.useDefaultUrlLayout = false;
+		DownloadChemCompProvider cc = new DownloadChemCompProvider();
+		ChemCompGroupFactory.setChemCompProvider(cc);
+		cc.checkDoFirstInstall();
+		cache.setFileParsingParams(params);
+		StructureIO.setAtomCache(cache);
+		return cache;
 	}
 }

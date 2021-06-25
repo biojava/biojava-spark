@@ -44,8 +44,8 @@
 		<scala.version>2.11</scala.version>
 		<slf4j.version>1.7.20</slf4j.version>
 		<log4j.version>2.13.3</log4j.version>
-		<biojava.version>5.0.0-alpha6</biojava.version>
-		<mmtf-spark.version>0.0.6</mmtf-spark.version>
+		<biojava.version>6.0.0-alpha4</biojava.version>
+		<mmtf-spark.version>0.0.8</mmtf-spark.version>
 		<additionalparam>-Xdoclint:none</additionalparam>
 	</properties>
 
@@ -90,16 +90,26 @@
 			<artifactId>argparse4j</artifactId>
 			<version>0.7.0</version>
 		</dependency>
-		<!-- for CSV support -->
-		<dependency>
-			<groupId>com.databricks</groupId>
-			<artifactId>spark-csv_${scala.version}</artifactId>
-			<version>1.2.0</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.biojava</groupId>
 			<artifactId>biojava-structure</artifactId>
 			<version>${biojava.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rcsb</groupId>
+			<artifactId>mmtf-api</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rcsb</groupId>
+			<artifactId>mmtf-codec</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.rcsb</groupId>
+			<artifactId>mmtf-serialization</artifactId>
+			<version>1.0.10</version>
 		</dependency>
 		<dependency>
 			<groupId>org.rcsb</groupId>

@@ -16,7 +16,7 @@ import org.biojava.nbio.structure.StructureIO;
 import org.biojava.nbio.structure.StructureImpl;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureReader;
 import org.biojava.nbio.structure.io.mmtf.MmtfStructureWriter;
-import org.biojava.nbio.structure.io.mmtf.MmtfUtils;
+import org.biojava.spark.utils.BiojavaSparkUtils;
 import org.rcsb.mmtf.dataholders.MmtfStructure;
 import org.rcsb.mmtf.decoder.GenericDecoder;
 import org.rcsb.mmtf.decoder.StructureDataToAdapter;
@@ -66,7 +66,7 @@ public class MapperUtils implements Serializable{
 	 * @return a {@link JavaPairRDD} with key {@link Text} and value {@link BytesWritable}
 	 */
 	public static JavaPairRDD<Text, BytesWritable> generateRdd(List<String> inputList, String ccdUrl) {
-		MmtfUtils.setUpBioJava(ccdUrl);
+		BiojavaSparkUtils.setUpBioJava(ccdUrl);
 		return SparkUtils.getSparkContext().parallelize(inputList)
 				.mapToPair(t -> MapperUtils.getByteArray(t))
 				.mapToPair(t -> new Tuple2<String,byte[]>(t._1, WriterUtils.gzipCompress(t._2)))
@@ -100,7 +100,7 @@ public class MapperUtils implements Serializable{
 		return new Tuple2<String,byte[]>(structure.getPDBCode(), outByteArr);
 	}
 	
-	private static byte[] produceByteArray(Structure structure, String mmtfProducer) {
+	private static byte[] produceByteArray(Structure structure, String mmtfProducer) throws IOException {
 		MmtfStructure mmtfStructure = encodeStructure(structure);
 		mmtfStructure.setMmtfProducer(mmtfProducer);
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -114,7 +114,7 @@ public class MapperUtils implements Serializable{
 		MmtfStructure mmtfStructure = new GenericEncoder(inflatorToGet).getMmtfEncodedStructure();
 		return mmtfStructure;
 	}
-	private static Structure getFomByteArray(byte[] inputByteArr) {
+	private static Structure getFomByteArray(byte[] inputByteArr) throws IOException {
 		MmtfStructureReader mmtfStructureReader = new MmtfStructureReader();
 		new StructureDataToAdapter(new GenericDecoder(new MessagePackSerialization().deserialize(new ByteArrayInputStream(inputByteArr))), mmtfStructureReader);
 		return mmtfStructureReader.getStructure();
