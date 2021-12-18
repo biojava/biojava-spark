@@ -43,7 +43,7 @@
 		<project.build.targetEncoding>UTF-8</project.build.targetEncoding>
 		<scala.version>2.11</scala.version>
 		<slf4j.version>1.7.20</slf4j.version>
-		<log4j.version>2.16.0</log4j.version>
+		<log4j.version>2.17.0</log4j.version>
 		<biojava.version>6.0.0-alpha4</biojava.version>
 		<mmtf-spark.version>0.0.8</mmtf-spark.version>
 		<additionalparam>-Xdoclint:none</additionalparam>
